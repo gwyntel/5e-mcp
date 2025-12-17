@@ -1,0 +1,26 @@
+{
+    "mcpServers": {
+        "solo-dnd": {
+            "command": "python3",
+            "args": [
+                "-m",
+                "dnd_mcp_server.server"
+            ],
+            "env": {
+                "PYTHONPATH": "/Users/gwyn/projects/5e-mcp/gemini"
+            },
+            "disabled": false,
+            "autoApprove": [
+                "get_character_sheet",
+                "check_conditions",
+                "get_inventory",
+                "get_spell_list",
+                "lookup_monster",
+                "lookup_spell",
+                "lookup_item",
+                "lookup_feat",
+                "roll_dice"
+            ]
+        }
+    }
+}

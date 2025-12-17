@@ -1,0 +1,280 @@
+from typing import List, Dict, Any, Optional
+import random
+from ..persistence.state import get_game_state
+from ..models.combat import Combatant, CombatState
+from ..tools.dice import roll_initiative, roll_dice
+
+from .lookup import get_monster_data
+
+def start_combat(entities: List[str], campaign_id: str = "default") -> str:
+    """
+    Begins a new combat encounter. Requires a list of monster names (e.g. ['Goblin', 'Worg']). 
+    Takes care of initializing state and can auto-lookup monster stats.
+    - entities: List of names of monsters to fight.
+    """
+    state = get_game_state(campaign_id)
+    combat = state.combat
+    if combat.active:
+        return "Combat already active. End current combat first."
+    
+    combat.active = True
+    combat.round = 1
+    combat.combatants = []
+    
+    # Add Player
+    if state.character:
+        char = state.character
+        pc = Combatant(
+            id=char.id,
+            name=char.identity.name,
+            type="player",
+            hp=char.health.current_hp,
+            max_hp=char.health.max_hp,
+            ac=char.defense.ac
+        )
+        combat.combatants.append(pc)
+    
+    existing_ids = {c.id for c in combat.combatants}
+    
+    for entity_ref in entities:
+        # Check if it's the player ID (skip)
+        if state.character and entity_ref == state.character.id: 
+            continue
+            
+        # Unique ID handling
+        mob_id = entity_ref
+        while mob_id in existing_ids:
+             mob_id += "_1"
+        existing_ids.add(mob_id)
+
+        # Lookup data
+        data = get_monster_data(entity_ref) # Try using name
+        
+        if data:
+            # Parse HP/AC
+            hp = data.get("hit_points", 10)
+            ac = data.get("armor_class", 10)
+            name = data.get("name", entity_ref)
+            # We could store attacks here if Combatant supported it
+        else:
+            # Fallback
+            hp, ac, name = 10, 12, entity_ref
+            
+        mob = Combatant(
+            id=mob_id,
+            name=name,
+            type="monster",
+            hp=hp,
+            max_hp=hp,
+            ac=ac
+        )
+        combat.combatants.append(mob)
+
+    state.save_all()
+    return f"Combat started with {len(combat.combatants)} combatants. Round 1."
+
+def roll_initiative_for_all(campaign_id: str = "default") -> str:
+    """
+    Rolls Initiative for every combatant (player and monsters), applies modifiers, and sorts the Turn Order.
+    Call this immediately after start_combat.
+    """
+    state = get_game_state(campaign_id)
+    combat = state.combat
+    if not combat.active:
+        return "No active combat."
+        
+    results = []
+    for c in combat.combatants:
+        # Puts dex mod logic here? Or just assumes 0 for now?
+        # Ideally fetch dex mod from character/monster model.
+        # Simplified:
+        mod = 0
+        if c.type == "player" and state.character:
+            mod = state.character.defense.initiative_mod
+        
+        init = roll_initiative(mod)
+        c.initiative = init
+        results.append(f"{c.name}: {init}")
+        
+    # Sort by initiative desc
+    combat.combatants.sort(key=lambda x: x.initiative, reverse=True)
+    combat.turn_index = 0
+    
+    state.save_all()
+    return "Initiative Rolled:\n" + "\n".join(results)
+
+def get_initiative_order(campaign_id: str = "default") -> str:
+    """
+    Returns the sorted list of combatants for the current round, indicating whose turn it is and their HP status.
+    Use this at the start of every turn to see who acts next.
+    """
+    state = get_game_state(campaign_id)
+    combat = state.combat
+    if not combat.active:
+        return "No active combat."
+        
+    order = []
+    for i, c in enumerate(combat.combatants):
+        marker = "-> " if i == combat.turn_index else "   "
+        order.append(f"{marker}{c.name} ({c.id}) - Init: {c.initiative}, HP: {c.hp}/{c.max_hp}, Status: {c.status}")
+        
+    return "Turn Order:\n" + "\n".join(order)
+
+def next_turn(campaign_id: str = "default") -> str:
+    """
+    Ends the current turn and advances to the next combatant in the Initiative Order. 
+    Increments rounds automatically when the order loops.
+    """
+    state = get_game_state(campaign_id)
+    combat = state.combat
+    if not combat.active:
+        return "No active combat."
+        
+    combat.turn_index += 1
+    if combat.turn_index >= len(combat.combatants):
+        combat.turn_index = 0
+        combat.round += 1
+        return f"Round {combat.round} begins! It is {combat.current_actor.name}'s turn."
+    
+    current = combat.current_actor
+    # Skip dead/fled
+    while current.status != "active":
+        combat.turn_index += 1
+        if combat.turn_index >= len(combat.combatants):
+            combat.turn_index = 0
+            combat.round += 1
+        current = combat.current_actor
+        
+    state.save_all()
+    return f"It is {current.name}'s turn."
+
+def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool = False, campaign_id: str = "default") -> str:
+    """
+    Resolves an attack roll (1d20 + modifiers) against a target's AC. 
+    Returns HIT/MISS and damage dice details but does NOT apply damage to HP.
+    - attacker_id/target_id: The ID strings from get_initiative_order().
+    """
+    state = get_game_state(campaign_id)
+    combat = state.combat
+    
+    # Validation
+    attacker = next((c for c in combat.combatants if c.id == attacker_id), None)
+    target = next((c for c in combat.combatants if c.id == target_id), None)
+    
+    if not attacker: return f"Attacker {attacker_id} not found."
+    if not target: return f"Target {target_id} not found."
+    
+    # Determine bonuses (Simplified: Need to fetch from Char/Monster models)
+    # For prototype: Assume player uses Char model, Monsters use fixed +4
+    attack_bonus = 4
+    damage_dice = "1d6+2"
+    
+    if attacker.type == "player" and state.character:
+        # Find weapon in attacks
+        atk_meta = next((a for a in state.character.combat.attacks if a.name.lower() == weapon.lower()), None)
+        if atk_meta:
+            attack_bonus = atk_meta.bonus
+            damage_dice = atk_meta.damage
+            # Fallback for "Sword", "Bow" etc if exact match fails, or assume improvised
+            pass
+            
+    elif attacker.type == "monster":
+        # Fetch monster data to check specific actions
+        from .lookup import get_monster_data
+        data = get_monster_data(attacker.name)
+        if data and "actions" in data:
+            # Look for action name
+            # Fuzzy match action name
+            action = next((a for a in data["actions"] if weapon.lower() in a.get("name", "").lower()), None)
+            if not action:
+                 # Try first action if no match (default attack)
+                 action = data["actions"][0] if data["actions"] else None
+                 
+            if action:
+                attack_bonus = action.get("attack_bonus", 4)
+                # Damage dice often in desc: "Hit: 7 (1d6 + 4) damage"
+                # Need regex to parse if 'damage_dice' key not present (Open5e often doesn't have structured damage)
+                # But 'damage_dice' might occur in some records. 
+                # fallback parse description:
+                desc = action.get("desc", "")
+                import re
+                # Pattern: (1d6 + 4) or 1d6
+                dmg_match = re.search(r'\(?(\d+d\d+(?:\s?[\+\-]\s?\d+)?)\)?', desc)
+                if dmg_match:
+                    damage_dice = dmg_match.group(1).replace(" ", "")
+            
+    # Roll Attack
+    d20_roll = random.randint(1, 20) 
+    # Use dice.py logic if advantage? Re-implementing simplified here for speed/context
+    if advantage:
+        d20_roll = max(d20_roll, random.randint(1, 20))
+        
+    total_to_hit = d20_roll + attack_bonus
+    
+    # Roll Damage (Simulation)
+    # Parse damage dice string "1d8+3"
+    # Basic parse:
+    dmg_parts = damage_dice.split('+')
+    dmg_roll_str = dmg_parts[0]
+    dmg_mod = int(dmg_parts[1]) if len(dmg_parts) > 1 else 0
+    
+    # Hacky extraction of XdY
+    try:
+        d_split = dmg_roll_str.lower().split('d')
+        num = int(d_split[0])
+        sides = int(d_split[1])
+        dmg_val = sum(random.randint(1, sides) for _ in range(num)) + dmg_mod
+    except:
+        dmg_val = 0 # Error fallback
+        
+    result_str = (
+        f"Attack Result:\n"
+        f"Attacker: {attacker.name}\n"
+        f"Target: {target.name} (AC {target.ac})\n"
+        f"Roll: {d20_roll} + {attack_bonus} = **{total_to_hit}**\n"
+    )
+    
+    if total_to_hit >= target.ac:
+        result_str += f"HIT! Damage: {damage_dice} = **{dmg_val}**"
+    elif d20_roll == 20:
+         result_str += f"CRITICAL HIT! Damage: **{dmg_val * 2}** (Simplified Crit)" # Ideally roll twice
+    else:
+        result_str += "MISS!"
+        
+    return result_str
+
+def deal_damage(target_id: str, amount: int, type: str, campaign_id: str = "default") -> str:
+    """
+    Updates the target's HP by subtracting the specified damage amount. 
+    Handles death/unconsciousness if HP hits 0.
+    """
+    state = get_game_state(campaign_id)
+    combat = state.combat
+    target = next((c for c in combat.combatants if c.id == target_id), None)
+    
+    if not target: return f"Target {target_id} not found."
+    
+    target.hp -= amount
+    msg = f"{target.name} takes {amount} {type} damage. HP: {target.hp}/{target.max_hp}"
+    
+    if target.hp <= 0:
+        target.hp = 0
+        target.status = "unconscious" if target.type == "player" else "dead"
+        msg += f"\n{target.name} is {target.status.upper()}!"
+        
+    # Sync with character model if player
+    if target.type == "player" and state.character:
+        state.character.health.current_hp = target.hp
+        
+    state.save_all()
+    return msg
+
+def end_combat(campaign_id: str = "default") -> str:
+    """
+    Cleanly ends the current combat encounter, clearing all temporary combat states.
+    Call this when all enemies are defeated or the player flees.
+    """
+    state = get_game_state(campaign_id)
+    state.combat.active = False
+    state.save_all()
+    return "Combat ended."
