@@ -1,4 +1,4 @@
-from typing import Dict, Any, Literal, Optional
+from typing import Dict, Any, Literal, Optional, cast
 from ..persistence.state import get_game_state
 # from ..models.character import Character # Imported via persistence
 
@@ -284,11 +284,15 @@ def manage_conditions(action: Literal["apply", "remove", "check"], condition: Op
 
 def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
     state = get_game_state(campaign_id)
+    if not state.character:
+        return 0  # Default modifier if no character
     score = getattr(state.character.stats, stat_name.lower(), 10)
     return (score - 10) // 2
 
 def get_proficiency_bonus(campaign_id: str = "default") -> int:
     state = get_game_state(campaign_id)
+    if not state.character:
+        return 2  # Default proficiency bonus
     # Or calculate from level: ceil(level/4) + 1
     return state.character.stats.proficiency_bonus
 
@@ -362,7 +366,7 @@ def create_character(
     # 1. Identity
     # 1. Identity
     identity = CharacterIdentity(
-        name=name, race=race, class_name=class_name, background=background, level=level
+        name=name, race=race, class_=class_name, background=background, level=level
     )
     
     # 2. Stats
@@ -434,7 +438,7 @@ def create_character(
         }
         
         spells = Spellcasting(
-            ability=ability_map.get(cls_lower, "int"),
+            ability=cast(Optional[Literal["str", "dex", "con", "int", "wis", "cha"]], ability_map.get(cls_lower, "int")),
             slots=slots,
             prepared=[]
         )

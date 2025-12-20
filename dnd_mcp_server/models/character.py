@@ -5,7 +5,7 @@ class CharacterIdentity(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     name: str
     race: str
-    class_name: str = Field(alias="class")
+    class_: str
     background: str
     level: int = 1
     xp: int = 0
