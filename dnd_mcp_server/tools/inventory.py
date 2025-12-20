@@ -9,17 +9,33 @@ def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
         return {"error": "No character loaded."}
     return char.inventory.model_dump()
 
-def add_item(item_id: str, campaign_id: str = "default") -> str:
-    """Adds an item to the inventory."""
+def add_item(item_id: str, equip_to_slot: Literal["main_hand", "off_hand", "armor", None] = None, campaign_id: str = "default") -> str:
+    """
+    Adds an item to the inventory and optionally equips it to a slot.
+    - item_id: ID of the item to add
+    - equip_to_slot: Optional slot to automatically equip the item ('main_hand', 'off_hand', 'armor', or None)
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char:
         return "Error: No character."
     
     char.inventory.items.append(item_id)
+    msg = f"Added {item_id} to inventory."
+    
+    # Auto-equip if slot specified
+    if equip_to_slot:
+        if equip_to_slot == "main_hand":
+            char.inventory.equipped.main_hand = item_id
+        elif equip_to_slot == "off_hand":
+            char.inventory.equipped.off_hand = item_id
+        elif equip_to_slot == "armor":
+            char.inventory.equipped.armor = item_id
+        msg += f" Equipped to {equip_to_slot}."
+    
     # TODO: Add logic to look up item weight and update total weight
     state.save_all()
-    return f"Added {item_id} to inventory."
+    return msg
 
 def remove_item(item_id: str, campaign_id: str = "default") -> str:
     """Removes an item from the inventory."""

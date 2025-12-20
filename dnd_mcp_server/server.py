@@ -9,7 +9,7 @@ from .tools.character import (
     calculate_ac, calculate_modifier, get_proficiency_bonus, create_character
 )
 from .tools.inventory import get_inventory, add_item, remove_item, equip_item, unequip_item, add_gold, remove_gold
-from .tools.combat import start_combat, roll_initiative_for_all, get_initiative_order, next_turn, make_attack, deal_damage, end_combat
+from .tools.combat import start_combat, roll_initiative_for_all, get_initiative_order, next_turn, make_attack, end_combat
 from .generators.monster import generate_monster
 from .generators.item import generate_magic_item
 from .generators.world import generate_location
@@ -24,11 +24,11 @@ mcp.tool()(roll_initiative)
 # --- Character Tools ---
 mcp.tool()(get_character_sheet)
 mcp.tool()(create_character)
-mcp.tool()(update_hp)
+mcp.tool()(update_hp) # Consolidated with deal_damage
 mcp.tool()(use_hit_dice)
 mcp.tool()(manage_conditions) # Consolidated
 mcp.tool()(update_stat)
-mcp.tool()(add_experience)
+mcp.tool()(add_experience) # Level-up detection integrated
 mcp.tool()(calculate_ac)
 mcp.tool()(calculate_modifier)
 mcp.tool()(get_proficiency_bonus)
@@ -48,24 +48,24 @@ mcp.tool()(roll_initiative_for_all)
 mcp.tool()(get_initiative_order)
 mcp.tool()(next_turn)
 mcp.tool()(make_attack)
-mcp.tool()(deal_damage)
+# deal_damage removed - consolidated into update_hp
 mcp.tool()(end_combat)
 
 # --- Spellcasting Tools ---
-from .tools.spells import get_spell_slots, cast_spell, prepare_spell
+from .tools.spells import get_spell_slots, cast_spell
+# prepare_spell removed - functionality integrated into cast_spell
 # use_spell_slot is removed from exposed tools per request (avail internally)
 mcp.tool()(get_spell_slots)
 mcp.tool()(cast_spell)
-mcp.tool()(prepare_spell)
 
 # --- Rest Tools ---
 from .tools.rest import rest
 mcp.tool()(rest) # Consolidated
 
 # --- Check & Save Tools ---
-from .tools.checks import make_skill_check, make_ability_check, make_death_save, stabilize_character
-mcp.tool()(make_skill_check)
-mcp.tool()(make_ability_check)
+from .tools.checks import make_check, make_death_save, stabilize_character
+# make_skill_check and make_ability_check removed - consolidated into make_check
+mcp.tool()(make_check)
 mcp.tool()(make_death_save)
 mcp.tool()(stabilize_character)
 

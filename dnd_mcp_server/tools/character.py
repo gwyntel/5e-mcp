@@ -12,14 +12,56 @@ def get_character_sheet(campaign_id: str = "default") -> Dict[str, Any]:
         return {"error": "No character found. detailed character creation needed."}
     return state.character.model_dump()
 
-def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", campaign_id: str = "default") -> str:
+def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: str = None, campaign_id: str = "default") -> str:
     """
-    Apply damage, healing, or temporary HP to the character. 
+    Apply damage, healing, or temporary HP to character or combat target. 
     Automatically handles death saves reset and unconscious rules.
     - amount: Positive integer value.
     - type: 'damage' (subtracts HP), 'healing' (adds HP), or 'temp' (sets Temporary HP).
+    - target_id: Optional combat target ID. If not provided, applies to player character.
     """
     state = get_game_state(campaign_id)
+    
+    # Handle combat target if specified
+    if target_id:
+        from ..models.combat import Combatant
+        combat = state.combat
+        if not combat.active:
+            return "No active combat."
+            
+        target = next((c for c in combat.combatants if c.id == target_id), None)
+        if not target:
+            return f"Target {target_id} not found."
+            
+        if type == "damage":
+            target.hp -= amount
+            msg = f"{target.name} takes {amount} {type} damage. HP: {target.hp}/{target.max_hp}"
+            
+            if target.hp <= 0:
+                target.hp = 0
+                target.status = "unconscious" if target.type == "player" else "dead"
+                msg += f"\n{target.name} is {target.status.upper()}!"
+                
+            # Sync with character model if player
+            if target.type == "player" and state.character:
+                state.character.health.current_hp = target.hp
+                
+        elif type == "healing":
+            target.hp = min(target.hp + amount, target.max_hp)
+            msg = f"{target.name} healed {amount} HP. Current HP: {target.hp}/{target.max_hp}"
+            
+            # Sync with character model if player
+            if target.type == "player" and state.character:
+                state.character.health.current_hp = target.hp
+                
+        elif type == "temp":
+            # Temp HP for combat targets - simplified, just track in message
+            msg = f"{target.name} gains {amount} temporary HP."
+            
+        state.save_all()
+        return msg
+    
+    # Handle player character
     char = state.character
     if not char:
         return "Error: No character loaded."

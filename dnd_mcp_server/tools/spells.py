@@ -45,12 +45,25 @@ def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
         return f"Prepared spell: {spell_name}."
     return f"Spell {spell_name} is already prepared."
 
-def cast_spell(spell_name: str, level: int, concentration: bool = False, campaign_id: str = "default") -> str:
+def cast_spell(spell_name: str, level: int, concentration: bool = False, prepare: bool = False, campaign_id: str = "default") -> str:
     """
-    Casts a spell, consuming a slot. 
-    Handles concentration tracking.
+    Casts a spell, consuming a slot. Handles concentration tracking and optional preparation.
+    - spell_name: Name of the spell to cast
+    - level: Spell level (0 for cantrips)
+    - concentration: Whether the spell requires concentration
+    - prepare: If True, adds the spell to prepared list before casting (for classes that prepare spells)
     """
-    # 1. Consume slot
+    state = get_game_state(campaign_id)
+    char = state.character
+    if not char or not char.spellcasting:
+        return "Error: No spellcasting ability."
+    
+    # 1. Prepare spell if requested
+    if prepare:
+        if spell_name not in char.spellcasting.prepared:
+            char.spellcasting.prepared.append(spell_name)
+    
+    # 2. Consume slot
     # (Cantrips level 0 don't consume)
     msg = ""
     if level > 0:
@@ -59,20 +72,17 @@ def cast_spell(spell_name: str, level: int, concentration: bool = False, campaig
             return res
         msg += res + "\n"
         
-    # 2. Check prep (optional rule enforcement)
-    state = get_game_state(campaign_id)
-    char = state.character
-    
+    # 3. Check prep (optional rule enforcement)
     # Simple check: If prepared list is not empty, assume we are tracking prep.
     # If empty, maybe they are a known caster (Bard) or haven't set it up.
     # We'll enforce only if they have > 0 prepared spells, implying usage.
-    if char and char.spellcasting and char.spellcasting.prepared:
+    if char.spellcasting.prepared:
         # fuzzy match
         known = any(s.lower() == spell_name.lower() for s in char.spellcasting.prepared)
         if not known:
-            return f"Error: Spell '{spell_name}' is not prepared."
+            return f"Error: Spell '{spell_name}' is not prepared. Use prepare=True to prepare it first."
     
-    # 3. Handle Concentration
+    # 4. Handle Concentration
     if concentration:
         # Check existing
         # Simplified: Check conditions for "Concentrating"

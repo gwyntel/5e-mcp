@@ -9,7 +9,7 @@ The AI tells the story, but **This Server** handles the rules. It rolls the dice
 
 ---
 
-**Authors**: Gwyneth & Gemini 3 Pro (in Antigravity Agent Harness)
+**Authors**: Gwyneth & Gemini 3 Pro (in Antigravity Agent Harness) & GLM 4.6 (in Cline Agent Harness)
 
 ## 🚀 Getting Started (For In-Laws & friends!)
 
@@ -66,13 +66,13 @@ You need an AI interface that supports MCP, like **Claude Desktop**.
 
 Based on comprehensive testing and user feedback, here's our development roadmap to make the 5e MCP Server even better:
 
-### 🔄 API Consolidation (v1.1)
+### 🔄 API Consolidation (v1.1) ✅ COMPLETED
 **Goal**: Reduce tool count from ~35 to ~25 for cleaner, more efficient interactions
-- [ ] Merge `update_hp` and `deal_damage` into unified `update_hp(amount, type, campaign_id)`
-- [ ] Combine `make_skill_check` and `make_ability_check` into `make_check(type, skill_or_ability, ...)`
-- [ ] Integrate level-up detection into `add_experience` to eliminate separate XP checks
-- [ ] Streamline `add_item` + `equip_item` workflow for new loot
-- [ ] Evaluate `prepare_spell` necessity vs `cast_spell` slot tracking
+- [x] Merge `update_hp` and `deal_damage` into unified `update_hp(amount, type, target_id, campaign_id)`
+- [x] Combine `make_skill_check` and `make_ability_check` into `make_check(check_type, skill_or_ability, ...)`
+- [x] Integrate level-up detection into `add_experience` to eliminate separate XP checks
+- [x] Streamline `add_item` + `equip_item` workflow for new loot with `equip_to_slot` parameter
+- [x] Evaluate `prepare_spell` necessity vs `cast_spell` slot tracking - integrated `prepare` parameter
 
 ### 🤖 Small LLM Compatibility (v1.2)
 **Goal**: Enable reliable operation with local 7B-13B models
@@ -131,13 +131,15 @@ Based on comprehensive testing and user feedback, here's our development roadmap
 
 | Category | Tool | What it does |
 | :--- | :--- | :--- |
-| **Action** | `make_skill_check` | Rolls d20 + Mod + Proficiency (e.g. Acrobatics) |
+| **Action** | `make_check` | Unified skill/ability checks (e.g. `make_check("skill", "athletics")`) |
 | **Combat** | `start_combat` | Spawns monsters and rolls initiative. |
 | **Combat** | `make_attack` | Rolls to hit vs AC. If successful, you deal damage. |
 | **Character** | `get_character_sheet` | Reads your current HP, XP, and Stats. |
-| **Magic** | `cast_spell` | Uses a spell slot and tracks concentration. |
+| **Character** | `update_hp` | Unified damage/healing/temp HP for characters or combat targets. |
+| **Magic** | `cast_spell` | Uses a spell slot, tracks concentration, can prepare spells. |
 | **Rest** | `rest` | Performs a Short or Long rest to recover resources. |
 | **Status** | `manage_conditions` | Apply or remove conditions like "Prone" or "Exhaustion". |
+| **Inventory** | `add_item` | Add items and optionally equip them in one step. |
 | **Economy** | `add_gold` | Adds gold to your inventory. |
 
 ## 🎲 Solo Balancing
