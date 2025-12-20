@@ -62,6 +62,70 @@ You need an AI interface that supports MCP, like **Claude Desktop**.
 *   **Session Continuity**: The server remembers what happened! AI DMs can save/load session summaries to pick up the story exactly where you left off.
 *   **Economy**: Track gold, buy items, and manage your wealth (`add_gold`, `remove_gold`).
 
+## 🗺️ Roadmap
+
+Based on comprehensive testing and user feedback, here's our development roadmap to make the 5e MCP Server even better:
+
+### 🔄 API Consolidation (v1.1)
+**Goal**: Reduce tool count from ~35 to ~25 for cleaner, more efficient interactions
+- [ ] Merge `update_hp` and `deal_damage` into unified `update_hp(amount, type, campaign_id)`
+- [ ] Combine `make_skill_check` and `make_ability_check` into `make_check(type, skill_or_ability, ...)`
+- [ ] Integrate level-up detection into `add_experience` to eliminate separate XP checks
+- [ ] Streamline `add_item` + `equip_item` workflow for new loot
+- [ ] Evaluate `prepare_spell` necessity vs `cast_spell` slot tracking
+
+### 🤖 Small LLM Compatibility (v1.2)
+**Goal**: Enable reliable operation with local 7B-13B models
+- [ ] Add one-shot examples to every tool description
+- [ ] Create workflow guides for common sequences (combat, rest, level-up)
+- [ ] Implement client-side JSON schema validation
+- [ ] Simplify tool descriptions to <50 words each
+- [ ] Add constraint/validation layer with helpful error messages
+
+### 📚 Documentation Enhancements (v1.1)
+**Goal**: Clarify edge cases and improve DM guidance
+- [ ] Document temporary HP damage absorption rules
+- [ ] Clarify spell preparation vs casting mechanics
+- [ ] Add condition duration tracking documentation
+- [ ] Specify campaign ID naming conventions (alphanumeric + underscores)
+- [ ] Add death save recovery path documentation
+- [ ] Create "Common Workflows" section with step-by-step examples
+
+### 🐛 Bug Fixes & Polish (v1.0.1)
+**Goal**: Address issues found during comprehensive testing
+- [ ] Fix HP display bug (goblins showing 187 HP instead of ~7)
+- [ ] Improve initiative order formatting (add indices: "Goblin #1", "Goblin #2")
+- [ ] Verify monster initialization doesn't accidentally scale HP
+- [ ] Test spell slot consumption and restoration mechanics
+- [ ] Validate concentration tracking functionality
+
+### ✨ New Features (v1.3)
+**Goal**: Add quality-of-life improvements based on user feedback
+- [ ] Implement `generate_loot(monster_name, campaign_id)` helper tool
+- [ ] Add auto-expiration for conditions with duration timers
+- [ ] Create comprehensive test suite with mock wizard character
+- [ ] Add loot generation based on monster CR and treasure tables
+- [ ] Implement party management for multi-character campaigns
+
+### 🚀 Performance & Stability (v1.4)
+**Goal**: Optimize for production use
+- [ ] Add comprehensive error handling and recovery
+- [ ] Implement data validation at all entry points
+- [ ] Optimize save/load performance for large campaigns
+- [ ] Add backup and migration tools for save data
+- [ ] Create automated testing pipeline
+
+### 🎯 Stretch Goals (v2.0)
+**Goal**: Advanced features for power users
+- [ ] Multi-character party support
+- [ ] Custom monster and item creation tools
+- [ ] Campaign import/export (JSON, Markdown)
+- [ ] Integration with external VTT platforms
+- [ ] Homebrew content support system
+
+---
+**Note**: Version numbers are tentative and may shift based on development priorities. Community feedback and contributions will help shape the final roadmap!
+
 ## 🛠️ Tool Cheat Sheet
 (The AI uses these automatically, but it's good to know what's happening under the hood!)
 
