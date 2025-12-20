@@ -14,7 +14,10 @@ def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, d
     state = get_game_state(campaign_id)
     char = state.character
     if not char: return "No character."
-    
+
+    # Map 'int' to 'intelligence' due to Pydantic alias
+    stat_mapping = {"int": "intelligence"}
+
     if check_type == "skill":
         # 1. Get Modifier for skill
         # Map skill to ability
@@ -25,40 +28,42 @@ def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, d
             "animal_handling": "wis", "insight": "wis", "medicine": "wis", "perception": "wis", "survival": "wis",
             "deception": "cha", "intimidation": "cha", "performance": "cha", "persuasion": "cha"
         }
-        
+
         ability = skill_ability_map.get(skill_or_ability.lower())
         if not ability:
             return f"Unknown skill '{skill_or_ability}'. Use check_type='ability' for raw stats."
-            
-        base_mod = getattr(char.stats, ability, 10)
+
+        actual_ability = stat_mapping.get(ability, ability)
+        base_mod = getattr(char.stats, actual_ability, 10)
         mod = (base_mod - 10) // 2
-        
+
         # Add proficiency if proficient
         prof_bonus = getattr(char.skills, skill_or_ability.lower(), None)
-        # The models/character.py schema says skills are Optional[int]. 
+        # The models/character.py schema says skills are Optional[int].
         # If set, it's the *total bonus*? Or just the proficiency flag?
-        # "athletics": 5 implies total bonus. 
+        # "athletics": 5 implies total bonus.
         # If the user model stores the TOTAL bonus in skills, we just use that.
         # If it stores *proficiency* (like a boolean), we calculate.
-        # The prompt says: "athletics: 5 ... # Proficient only". This implies the value IS the bonus.
-        
+        # The prompt says: "athletics": 5 ... # Proficient only". This implies the value IS the bonus.
+
         total_bonus = prof_bonus if prof_bonus is not None else mod
-        
+
         # 2. Roll
         expression = f"1d20+{total_bonus}"
         result = roll_dice(expression, advantage=advantage)
-        
+
         return f"Skill Check ({skill_or_ability.title()}): {result} (DC {dc})"
-        
+
     elif check_type == "ability":
         # Raw ability check
-        score = getattr(char.stats, skill_or_ability.lower(), 10)
+        actual_stat = stat_mapping.get(skill_or_ability.lower(), skill_or_ability.lower())
+        score = getattr(char.stats, actual_stat, 10)
         mod = (score - 10) // 2
-        
+
         expression = f"1d20+{mod}"
         result = roll_dice(expression, advantage=advantage)
         return f"Ability Check ({skill_or_ability.upper()}): {result} (DC {dc})"
-        
+
     else:
         return f"Invalid check_type '{check_type}'. Use 'skill' or 'ability'."
 

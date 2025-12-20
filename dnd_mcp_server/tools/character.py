@@ -11,9 +11,9 @@ def get_character_sheet(campaign_id: str = "default") -> str:
     state = get_game_state(campaign_id)
     if not state.character:
         return '{"error": "No character found. detailed character creation needed."}'
-    return state.character.model_dump_json(indent=2)
+    return cast(str, state.character.model_dump_json(indent=2))
 
-def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: str = None, campaign_id: str = "default") -> str:
+def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
     """
     Apply damage, healing, or temporary HP to character or combat target. 
     Automatically handles death saves reset and unconscious rules.
@@ -102,16 +102,20 @@ def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage"
 
 def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
     """
-    Permanently updates a base Ability Score (str, dex, con, int, wis, cha) to a specific new value. 
+    Permanently updates a base Ability Score (str, dex, con, int, wis, cha) to a specific new value.
     Use this for leveling up or permanent magical effects.
     """
     state = get_game_state(campaign_id)
     char = state.character
     if not char:
         return "Error: No character."
-    
-    if hasattr(char.stats, stat):
-        setattr(char.stats, stat, value)
+
+    # Map 'int' to 'intelligence' due to Pydantic alias
+    stat_mapping = {"int": "intelligence"}
+    actual_stat = stat_mapping.get(stat, stat)
+
+    if hasattr(char.stats, actual_stat):
+        setattr(char.stats, actual_stat, value)
         state.save_all()
         return f"Updated {stat} to {value}."
     else:
@@ -287,7 +291,10 @@ def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
     state = get_game_state(campaign_id)
     if not state.character:
         return 0  # Default modifier if no character
-    score = getattr(state.character.stats, stat_name.lower(), 10)
+    # Map 'int' to 'intelligence' due to Pydantic alias
+    stat_mapping = {"int": "intelligence"}
+    actual_stat = stat_mapping.get(stat_name.lower(), stat_name.lower())
+    score = getattr(state.character.stats, actual_stat, 10)
     return (score - 10) // 2
 
 def get_proficiency_bonus(campaign_id: str = "default") -> int:

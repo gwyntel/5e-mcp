@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class MonsterIdentity(BaseModel):
     name: str
@@ -12,7 +12,7 @@ class MonsterStats(BaseModel):
     str: int
     dex: int
     con: int
-    int: int
+    intelligence: int = Field(alias="int")
     wis: int
     cha: int
 

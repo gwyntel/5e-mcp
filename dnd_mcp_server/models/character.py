@@ -14,7 +14,7 @@ class AbilityScores(BaseModel):
     str: int
     dex: int
     con: int
-    int: int
+    intelligence: int = Field(alias="int")
     wis: int
     cha: int
     proficiency_bonus: int = 2
@@ -44,7 +44,7 @@ class Saves(BaseModel):
     str: Optional[int] = None
     dex: Optional[int] = None
     con: Optional[int] = None
-    int: Optional[int] = None
+    intelligence: Optional[int] = Field(alias="int", default=None)
     wis: Optional[int] = None
     cha: Optional[int] = None
 
