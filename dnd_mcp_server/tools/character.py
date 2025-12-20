@@ -208,7 +208,7 @@ def use_hit_dice(count: int, campaign_id: str = "default") -> str:
     
     return f"Spent {spent} hit dice ({', '.join(log)}). Healed {healed_total} HP. Current: {char.health.current_hp}/{char.health.max_hp}"
 
-def manage_conditions(action: Literal["apply", "remove", "check"], condition: str = None, duration: int = 10, levels: int = 1, campaign_id: str = "default") -> str:
+def manage_conditions(action: Literal["apply", "remove", "check"], condition: Optional[str] = None, duration: int = 10, levels: int = 1, campaign_id: str = "default") -> str:
     """
     Manages conditions and exhaustion on the character.
     - action: 'apply', 'remove', or 'check'.
