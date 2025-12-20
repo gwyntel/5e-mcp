@@ -2,15 +2,16 @@ from typing import Dict, Any, Literal, Optional, cast
 from ..persistence.state import get_game_state
 # from ..models.character import Character # Imported via persistence
 
-def get_character_sheet(campaign_id: str = "default") -> Dict[str, Any]:
+def get_character_sheet(campaign_id: str = "default") -> str:
     """
-    Retrieves the complete character sheet including identity, stats, health, equipment, and spells. 
+    Retrieves the complete character sheet including identity, stats, health, equipment, and spells.
     Always call this when you need to check the player's current state, inventory, or available resources.
+    Returns JSON string of the character data.
     """
     state = get_game_state(campaign_id)
     if not state.character:
-        return {"error": "No character found. detailed character creation needed."}
-    return state.character.model_dump()
+        return '{"error": "No character found. detailed character creation needed."}'
+    return state.character.model_dump_json(indent=2)
 
 def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: str = None, campaign_id: str = "default") -> str:
     """
@@ -437,8 +438,9 @@ def create_character(
             "sorcerer": "cha", "bard": "cha", "warlock": "cha"
         }
         
+        ability_value = ability_map.get(cls_lower, "int")
         spells = Spellcasting(
-            ability=cast(Optional[Literal["str", "dex", "con", "int", "wis", "cha"]], ability_map.get(cls_lower, "int")),
+            ability=cast(Literal["str", "dex", "con", "int", "wis", "cha"], ability_value),
             slots=slots,
             prepared=[]
         )
