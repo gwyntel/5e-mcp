@@ -8,9 +8,8 @@ from .lookup import get_monster_data
 
 def start_combat(entities: List[str], campaign_id: str = "default") -> str:
     """
-    Begins a new combat encounter. Requires a list of monster names (e.g. ['Goblin', 'Worg']). 
-    Takes care of initializing state and can auto-lookup monster stats.
-    - entities: List of names of monsters to fight.
+    Start combat with specified monsters. Initializes combat state and adds combatants.
+    Example: start_combat(["Goblin", "2 Wolves"]) begins combat with 1 goblin and 2 wolves.
     """
     state = get_game_state(campaign_id)
     combat = state.combat
@@ -75,8 +74,8 @@ def start_combat(entities: List[str], campaign_id: str = "default") -> str:
 
 def roll_initiative_for_all(campaign_id: str = "default") -> str:
     """
-    Rolls Initiative for every combatant (player and monsters), applies modifiers, and sorts the Turn Order.
-    Call this immediately after start_combat.
+    Roll initiative for all combatants and sort turn order. Call after starting combat.
+    Example: roll_initiative_for_all() returns "Initiative Rolled:\nAria: 18\nGoblin: 12"
     """
     state = get_game_state(campaign_id)
     combat = state.combat
@@ -105,8 +104,8 @@ def roll_initiative_for_all(campaign_id: str = "default") -> str:
 
 def get_initiative_order(campaign_id: str = "default") -> str:
     """
-    Returns the sorted list of combatants for the current round, indicating whose turn it is and their HP status.
-    Use this at the start of every turn to see who acts next.
+    Get current turn order with HP status and whose turn it is. Use each round.
+    Example: get_initiative_order() shows "-> Aria (pc_abc123) - Init: 18, HP: 15/15"
     """
     state = get_game_state(campaign_id)
     combat = state.combat
@@ -122,8 +121,8 @@ def get_initiative_order(campaign_id: str = "default") -> str:
 
 def next_turn(campaign_id: str = "default") -> str:
     """
-    Ends the current turn and advances to the next combatant in the Initiative Order. 
-    Increments rounds automatically when the order loops.
+    Advance to next combatant's turn. Automatically increments rounds when order loops.
+    Example: next_turn() returns "It is Goblin's turn." or "Round 2 begins!"
     """
     state = get_game_state(campaign_id)
     combat = state.combat
@@ -150,9 +149,8 @@ def next_turn(campaign_id: str = "default") -> str:
 
 def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool = False, campaign_id: str = "default") -> str:
     """
-    Resolves an attack roll (1d20 + modifiers) against a target's AC. 
-    Returns HIT/MISS and damage dice details but does NOT apply damage to HP.
-    - attacker_id/target_id: The ID strings from get_initiative_order().
+    Resolve attack roll vs target AC. Returns hit/miss and damage but doesn't apply HP.
+    Example: make_attack("pc_abc123", "goblin_1", "Longsword") rolls attack vs goblin.
     """
     state = get_game_state(campaign_id)
     combat = state.combat
@@ -245,8 +243,8 @@ def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool =
 
 def deal_damage(target_id: str, amount: int, type: str, campaign_id: str = "default") -> str:
     """
-    Updates the target's HP by subtracting the specified damage amount. 
-    Handles death/unconsciousness if HP hits 0.
+    Apply damage to combat target. Handles death/unconsciousness when HP reaches 0.
+    Example: deal_damage("goblin_1", 8, "slashing") deals 8 slashing damage to goblin.
     """
     state = get_game_state(campaign_id)
     combat = state.combat
@@ -271,8 +269,8 @@ def deal_damage(target_id: str, amount: int, type: str, campaign_id: str = "defa
 
 def end_combat(campaign_id: str = "default") -> str:
     """
-    Cleanly ends the current combat encounter, clearing all temporary combat states.
-    Call this when all enemies are defeated or the player flees.
+    End current combat encounter and clear temporary combat state.
+    Example: end_combat() returns "Combat ended." and resets combat flags.
     """
     state = get_game_state(campaign_id)
     state.combat.active = False

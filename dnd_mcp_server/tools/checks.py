@@ -5,11 +5,8 @@ import random
 
 def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, dc: int = 10, advantage: bool = False, campaign_id: str = "default") -> str:
     """
-    Rolls a unified check (d20 + modifiers). Handles both skill checks and raw ability checks.
-    - check_type: 'skill' for trained skills (Athletics, Stealth, etc.) or 'ability' for raw stats (STR, DEX, etc.)
-    - skill_or_ability: Name of skill or ability (e.g. 'athletics', 'stealth', 'str', 'dex')
-    - dc: Difficulty Class for the check
-    - advantage: Whether to roll with advantage
+    Roll d20 + modifiers for skill or ability check vs Difficulty Class.
+    Example: make_check("skill", "athletics", 15) rolls Athletics check DC 15.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -69,8 +66,8 @@ def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, d
 
 def make_death_save(campaign_id: str = "default") -> str:
     """
-    Rolls a Death Saving Throw. Automatically tracks successes (3 = stable) and failures (3 = dead). 
-    Handles critical successes (revive to 1 HP) and critical failures (2 fails).
+    Roll death saving throw when at 0 HP. Tracks successes (3=stable) and failures (3=dead).
+    Example: make_death_save() returns "Death Save Roll: 18. Success."
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -112,8 +109,8 @@ def make_death_save(campaign_id: str = "default") -> str:
 
 def stabilize_character(campaign_id: str = "default") -> str:
     """
-    Immediately stabilizes the dying character (0 HP), resetting death save failures to 0. 
-    Use when a Medicine check succeeds or Spare the Dying is cast.
+    Stabilize dying character (0 HP), resetting death save failures to 0.
+    Example: stabilize_character() returns "Character stabilized. Death saves reset."
     """
     state = get_game_state(campaign_id)
     char = state.character

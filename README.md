@@ -74,13 +74,14 @@ Based on comprehensive testing and user feedback, here's our development roadmap
 - [x] Streamline `add_item` + `equip_item` workflow for new loot with `equip_to_slot` parameter
 - [x] Evaluate `prepare_spell` necessity vs `cast_spell` slot tracking - integrated `prepare` parameter
 
-### 🤖 Small LLM Compatibility (v1.2)
+### 🤖 Small LLM Compatibility (v1.2) ✅ COMPLETED
 **Goal**: Enable reliable operation with local 7B-13B models
-- [ ] Add one-shot examples to every tool description
-- [ ] Create workflow guides for common sequences (combat, rest, level-up)
-- [ ] Implement client-side JSON schema validation
-- [ ] Simplify tool descriptions to <50 words each
-- [ ] Add constraint/validation layer with helpful error messages
+- [x] Add one-shot examples to every tool description
+- [x] Create workflow guides for common sequences (combat, rest, level-up)
+- [x] Implement client-side JSON schema validation
+- [x] Simplify tool descriptions to <50 words each
+- [x] Add constraint/validation layer with helpful error messages
+  +++++++ REPLACE
 
 ### 📚 Documentation Enhancements (v1.1)
 **Goal**: Clarify edge cases and improve DM guidance

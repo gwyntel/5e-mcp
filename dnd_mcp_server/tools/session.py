@@ -8,8 +8,8 @@ def get_session_file_path(campaign_id: str) -> str:
 
 def load_session_history(campaign_id: str = "default") -> str:
     """
-    Returns all previous session summaries for the campaign.
-    Useful for getting back up to speed when resuming a campaign.
+    Load all previous session summaries for campaign continuity.
+    Example: load_session_history() returns formatted session logs with dates and summaries.
     """
     path = get_session_file_path(campaign_id)
     if not os.path.exists(path):
@@ -32,8 +32,8 @@ def load_session_history(campaign_id: str = "default") -> str:
 
 def save_session_summary(summary: str, campaign_id: str = "default") -> str:
     """
-    Saves a narrative summary of the session to the campaign log.
-    Call this at the end of a session to preserve the story.
+    Save narrative session summary to campaign log for story continuity.
+    Example: save_session_summary("Defeated goblins, found treasure") saves session summary.
     """
     ensure_campaign_dir(campaign_id)
     path = get_session_file_path(campaign_id)

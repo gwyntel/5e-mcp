@@ -31,9 +31,8 @@ def get_monster_data(name: str) -> Optional[Dict[str, Any]]:
 
 def lookup_monster(name: str, cr_range: Optional[str] = None) -> str:
     """
-    Searches the Open5e database for a monster by name (e.g., 'Goblin', 'Owlbear'). 
-    Returns a formatted stat block including HP, AC, Actions, and stats. 
-    'cr_range' allows filtering (e.g., '0-1').
+    Search Open5e database for monster stats, HP, AC, actions, and challenge rating.
+    Example: lookup_monster("Goblin", "0-1") returns goblin stats filtered by CR 0-1.
     """
     # Try exact match first
     data = _fetch("/v1/monsters/", {"name__iexact": name, "limit": 1})
@@ -81,8 +80,8 @@ def lookup_monster(name: str, cr_range: Optional[str] = None) -> str:
 
 def lookup_spell(name: str, level: Optional[int] = None, class_name: Optional[str] = None) -> str:
     """
-    Searches for a spell by name. Returns level, school, casting time, range, components, duration, and full description. 
-    Can filter by 'level' and 'class_name'.
+    Search for spell details including level, school, casting time, components, description.
+    Example: lookup_spell("Fireball", 3, "Wizard") returns Fireball spell details.
     """
     # Try exact match first
     params = {"name__iexact": name}
@@ -122,8 +121,8 @@ def lookup_spell(name: str, level: Optional[int] = None, class_name: Optional[st
 
 def lookup_item(name: str, type: Optional[str] = None, rarity: Optional[str] = None) -> str:
     """
-    Searches for Magic Items, Weapons, or Armor by name. 
-    Returns mechanics, rarity, cost, and properties. Checks magic items first then standard equipment.
+    Search for magic items, weapons, or armor with stats, rarity, cost, properties.
+    Example: lookup_item("Longsword +1") returns magic longsword details.
     """
     # Magic items
     # Try exact match
@@ -178,7 +177,8 @@ def lookup_item(name: str, type: Optional[str] = None, rarity: Optional[str] = N
 
 def lookup_feat(name: str) -> str:
     """
-    Searches for a Feat by name. Returns the prerequisites and full mechanical description.
+    Search for feat with prerequisites and mechanical description.
+    Example: lookup_feat("Sharpshooter") returns Sharpshooter feat details.
     """
     params = {"search": name}
     data = _fetch("/v1/feats/", params)
@@ -196,8 +196,8 @@ def lookup_feat(name: str) -> str:
 
 def get_spell_list(class_name: str, level: Optional[int] = None) -> str:
     """
-    Returns a list of all spell names for a specific Class (e.g. 'Wizard') and optional Level. 
-    Use this to help players browse available spells.
+    Get list of all spell names for specific class and optional level filter.
+    Example: get_spell_list("Wizard", 1) returns all level 1 Wizard spells.
     """
     # Open5e allows filtering by class: /v1/spells/?dnd_class=Wizard
     params = {"dnd_class__icontains": class_name, "limit": 50}
@@ -216,8 +216,8 @@ def get_spell_list(class_name: str, level: Optional[int] = None) -> str:
 
 def get_random_monster(cr: float, type: Optional[str] = None, environment: Optional[str] = None) -> str:
     """
-    Returns a random monster meeting the specified CR (or range) and optional Type/Environment filters. 
-    Useful for generating random encounters.
+    Get random monster by CR with optional type and environment filters.
+    Example: get_random_monster(2.0, "Beast") returns random CR 2 beast.
     """
     # Open5e allows filtering by CR exact: ?cr=1.0
     params = {"cr": cr, "limit": 50}

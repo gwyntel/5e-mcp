@@ -4,9 +4,8 @@ from ..persistence.state import get_game_state
 
 def get_character_sheet(campaign_id: str = "default") -> str:
     """
-    Retrieves the complete character sheet including identity, stats, health, equipment, and spells.
-    Always call this when you need to check the player's current state, inventory, or available resources.
-    Returns JSON string of the character data.
+    Get complete character sheet with stats, HP, inventory, spells. Use to check current state.
+    Example: get_character_sheet("campaign1") returns character JSON with all current values.
     """
     state = get_game_state(campaign_id)
     if not state.character:
@@ -15,11 +14,8 @@ def get_character_sheet(campaign_id: str = "default") -> str:
 
 def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
     """
-    Apply damage, healing, or temporary HP to character or combat target. 
-    Automatically handles death saves reset and unconscious rules.
-    - amount: Positive integer value.
-    - type: 'damage' (subtracts HP), 'healing' (adds HP), or 'temp' (sets Temporary HP).
-    - target_id: Optional combat target ID. If not provided, applies to player character.
+    Apply damage, healing, or temp HP to character or combat target. Handles death saves automatically.
+    Example: update_hp(8, "damage", "goblin_1") deals 8 damage to goblin_1 in combat.
     """
     state = get_game_state(campaign_id)
     
@@ -102,8 +98,8 @@ def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage"
 
 def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
     """
-    Permanently updates a base Ability Score (str, dex, con, int, wis, cha) to a specific new value.
-    Use this for leveling up or permanent magical effects.
+    Permanently update an Ability Score (str, dex, con, int, wis, cha) to a new value.
+    Example: update_stat("str", 16) sets Strength to 16 permanently.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -123,8 +119,8 @@ def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
 
 def add_experience(xp: int, campaign_id: str = "default") -> str:
     """
-    Awards Experience Points (XP) to the character. Tracks total XP.
-    Does not automatically trigger level up features (narrative only for now).
+    Award Experience Points to character. Automatically detects level ups based on XP thresholds.
+    Example: add_experience(150) adds 150 XP and checks for level up.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -166,9 +162,8 @@ def add_experience(xp: int, campaign_id: str = "default") -> str:
 
 def use_hit_dice(count: int, campaign_id: str = "default") -> str:
     """
-    Consumes Hit Dice to heal the character during a Short Rest.
-    Simulates rolling the dice + Constitution modifier for each die.
-    - count: Number of hit dice to spend.
+    Spend Hit Dice during Short Rest to heal. Rolls dice + Con modifier for each.
+    Example: use_hit_dice(2) spends 2 hit dice and heals the rolled amount.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -215,11 +210,8 @@ def use_hit_dice(count: int, campaign_id: str = "default") -> str:
 
 def manage_conditions(action: Literal["apply", "remove", "check"], condition: Optional[str] = None, duration: int = 10, levels: int = 1, campaign_id: str = "default") -> str:
     """
-    Manages conditions and exhaustion on the character.
-    - action: 'apply', 'remove', or 'check'.
-    - condition: Name of the condition (e.g. 'Prone', 'Poisoned', 'Exhaustion'). Required for apply/remove.
-    - duration: Duration in rounds (for apply). Default 10.
-    - levels: Number of levels (for Exhaustion only). Default 1.
+    Apply, remove, or check conditions like Prone, Poisoned, or Exhaustion on character.
+    Example: manage_conditions("apply", "Prone", 5) applies Prone for 5 rounds.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -288,6 +280,10 @@ def manage_conditions(action: Literal["apply", "remove", "check"], condition: Op
     return f"Invalid action {action}."
 
 def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
+    """
+    Calculate ability modifier for a stat (e.g., STR 14 gives +2 modifier).
+    Example: calculate_modifier("str") returns the Strength modifier.
+    """
     state = get_game_state(campaign_id)
     if not state.character:
         return 0  # Default modifier if no character
@@ -298,6 +294,10 @@ def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
     return (score - 10) // 2
 
 def get_proficiency_bonus(campaign_id: str = "default") -> int:
+    """
+    Get character's proficiency bonus based on level (2 at level 1, +1 every 4 levels).
+    Example: get_proficiency_bonus() returns current proficiency bonus.
+    """
     state = get_game_state(campaign_id)
     if not state.character:
         return 2  # Default proficiency bonus
@@ -306,8 +306,8 @@ def get_proficiency_bonus(campaign_id: str = "default") -> int:
 
 def calculate_ac(campaign_id: str = "default") -> int:
     """
-    Calculates and returns the character's current Armor Class (AC).
-    Consider this the source of truth for the player's defense.
+    Calculate character's Armor Class from equipped armor, shield, and Dexterity modifier.
+    Example: calculate_ac() returns current AC value (e.g., 16).
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -360,10 +360,9 @@ def create_character(
     campaign_id: str = "default"
 ) -> str:
     """
-    Initializes a brand new Level 1 (or higher) character with the specified Name, Race, Class, Background, and Stats. 
-    WARNING: This completely resets the current character state.
-    - stats: Dict with keys 'str', 'dex', 'con', 'int', 'wis', 'cha'.
-    - hit_die: 'd6', 'd8', 'd10', or 'd12'.
+    Create new character with name, race, class, background, and ability scores.
+    WARNING: This completely resets current character state.
+    Example: create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "int": 16, "wis": 13, "cha": 10})
     """
     state = get_game_state(campaign_id)
     from ..models.character import (

@@ -3,17 +3,8 @@ from typing import Literal
 
 def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:
     """
-    Performs a Rest.
-    - type: "short" (1 hour) or "long" (8 hours).
-    
-    Short Rest: 
-    - Recovers warlock spell slots and resets short-rest cooldown capabilities. 
-    - Does NOT use Hit Dice automatically; call 'use_hit_dice' separately if the player wants to heal.
-    
-    Long Rest: 
-    - Fully restores HP, Spell Slots, and Long Rest features. 
-    - Recovers half of maximum Hit Dice. 
-    - Reduces Exhaustion by 1 level.
+    Perform short (1 hour) or long (8 hours) rest to recover resources.
+    Example: rest("long") performs long rest, restoring HP and spell slots.
     """
     state = get_game_state(campaign_id)
     char = state.character

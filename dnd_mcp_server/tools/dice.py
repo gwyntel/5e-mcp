@@ -4,8 +4,8 @@ from typing import Dict, Any, Union
 
 def roll_dice(expression: str, advantage: bool = False, disadvantage: bool = False) -> str:
     """
-    Rolls any standard D&D dice expression (e.g., '2d6+4', '1d20-1'). 
-    Supports 'advantage' (roll 2 take higher) and 'disadvantage' (roll 2 take lower) flags.
+    Roll D&D dice expressions like '2d6+4' with optional advantage/disadvantage.
+    Example: roll_dice("1d20+3", True) rolls d20+3 with advantage.
     """
     # Simple parser for XdY+Z
     pattern = r"(\d+)d(\d+)([\+\-]\d+)?"
@@ -57,7 +57,8 @@ def roll_dice(expression: str, advantage: bool = False, disadvantage: bool = Fal
 
 def roll_initiative(dex_mod: int, advantage: bool = False) -> int:
     """
-    Rolls a d20 + Dex modifier for initiative tracking. Returns the raw value for sorting purposes.
+    Roll d20 + Dexterity modifier for combat initiative order.
+    Example: roll_initiative(2, True) rolls initiative with +2 Dex mod and advantage.
     """
     roll1 = random.randint(1, 20)
     roll2 = random.randint(1, 20)

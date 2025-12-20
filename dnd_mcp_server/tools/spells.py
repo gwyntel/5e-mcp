@@ -3,7 +3,10 @@ from ..persistence.state import get_game_state
 from ..models.character import Condition
 
 def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
-    """Returns available spell slots."""
+    """
+    Get available spell slots by level with current/max usage.
+    Example: get_spell_slots() returns {"1": {"current": 2, "max": 4}, "2": {...}}
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char or not char.spellcasting:
@@ -11,7 +14,10 @@ def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
     return {k: v.model_dump() for k, v in char.spellcasting.slots.items()}
 
 def use_spell_slot(level: int, campaign_id: str = "default") -> str:
-    """Consumes a spell slot of the given level."""
+    """
+    Consume one spell slot of specified level for casting.
+    Example: use_spell_slot(2) consumes one level 2 spell slot.
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char or not char.spellcasting:
@@ -31,8 +37,8 @@ def use_spell_slot(level: int, campaign_id: str = "default") -> str:
 
 def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
     """
-    Adds a spell to the list of prepared spells. 
-    Functionally, this validates if the spell is known/available.
+    Add spell to prepared spells list for classes that require preparation.
+    Example: prepare_spell("Fireball") adds Fireball to prepared spells.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -47,11 +53,8 @@ def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
 
 def cast_spell(spell_name: str, level: int, concentration: bool = False, prepare: bool = False, campaign_id: str = "default") -> str:
     """
-    Casts a spell, consuming a slot. Handles concentration tracking and optional preparation.
-    - spell_name: Name of the spell to cast
-    - level: Spell level (0 for cantrips)
-    - concentration: Whether the spell requires concentration
-    - prepare: If True, adds the spell to prepared list before casting (for classes that prepare spells)
+    Cast spell consuming slot, handling concentration and optional preparation.
+    Example: cast_spell("Fireball", 3, True) casts Fireball with concentration.
     """
     state = get_game_state(campaign_id)
     char = state.character

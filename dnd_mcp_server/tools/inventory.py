@@ -2,7 +2,10 @@ from typing import Dict, Any, List, Literal
 from ..persistence.state import get_game_state
 
 def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
-    """Returns the character's full inventory state."""
+    """
+    Get character's complete inventory including items, equipment, and gold.
+    Example: get_inventory() returns {"items": ["sword", "potion"], "gold": 50, "equipped": {...}}
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char:
@@ -11,9 +14,8 @@ def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
 
 def add_item(item_id: str, equip_to_slot: Literal["main_hand", "off_hand", "armor", None] = None, campaign_id: str = "default") -> str:
     """
-    Adds an item to the inventory and optionally equips it to a slot.
-    - item_id: ID of the item to add
-    - equip_to_slot: Optional slot to automatically equip the item ('main_hand', 'off_hand', 'armor', or None)
+    Add item to inventory and optionally equip it to a slot.
+    Example: add_item("longsword", "main_hand") adds and equips longsword.
     """
     state = get_game_state(campaign_id)
     char = state.character
@@ -38,7 +40,10 @@ def add_item(item_id: str, equip_to_slot: Literal["main_hand", "off_hand", "armo
     return msg
 
 def remove_item(item_id: str, campaign_id: str = "default") -> str:
-    """Removes an item from the inventory."""
+    """
+    Remove item from inventory and unequip if currently equipped.
+    Example: remove_item("potion") removes potion from inventory.
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char:
@@ -60,7 +65,10 @@ def remove_item(item_id: str, campaign_id: str = "default") -> str:
         return f"Item {item_id} not found in inventory."
 
 def equip_item(item_id: str, slot: Literal["main_hand", "off_hand", "armor"], campaign_id: str = "default") -> str:
-    """Equips an item to a specific slot."""
+    """
+    Equip inventory item to specific equipment slot.
+    Example: equip_item("shield", "off_hand") equips shield to off hand.
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char:
@@ -81,7 +89,10 @@ def equip_item(item_id: str, slot: Literal["main_hand", "off_hand", "armor"], ca
     return f"Equipped {item_id} to {slot}."
 
 def unequip_item(slot: Literal["main_hand", "off_hand", "armor"], campaign_id: str = "default") -> str:
-    """Unequips an item from a specific slot."""
+    """
+    Unequip item from specified equipment slot.
+    Example: unequip_item("main_hand") unequips main hand weapon.
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char:
@@ -98,7 +109,10 @@ def unequip_item(slot: Literal["main_hand", "off_hand", "armor"], campaign_id: s
     return f"Unequipped {slot}."
 
 def add_gold(amount: int, campaign_id: str = "default") -> str:
-    """Adds gold to the character's inventory."""
+    """
+    Add gold pieces to character's inventory.
+    Example: add_gold(100) adds 100 gold to character's total.
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char: return "Error: No character."
@@ -108,7 +122,10 @@ def add_gold(amount: int, campaign_id: str = "default") -> str:
     return f"Added {amount} gold. Total: {char.inventory.gold} gp."
 
 def remove_gold(amount: int, campaign_id: str = "default") -> str:
-    """Removes gold from the character's inventory."""
+    """
+    Remove gold from character's inventory if sufficient funds available.
+    Example: remove_gold(25) spends 25 gold if character has enough.
+    """
     state = get_game_state(campaign_id)
     char = state.character
     if not char: return "Error: No character."
