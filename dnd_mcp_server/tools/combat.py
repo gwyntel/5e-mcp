@@ -128,21 +128,39 @@ def next_turn(campaign_id: str = "default") -> str:
     combat = state.combat
     if not combat.active:
         return "No active combat."
+    
+    if not combat.combatants:
+        return "No combatants in combat."
         
     combat.turn_index += 1
     if combat.turn_index >= len(combat.combatants):
         combat.turn_index = 0
         combat.round += 1
-        return f"Round {combat.round} begins! It is {combat.current_actor.name}'s turn."
+        current = combat.current_actor
+        if current:
+            return f"Round {combat.round} begins! It is {current.name}'s turn."
+        else:
+            return f"Round {combat.round} begins!"
     
     current = combat.current_actor
+    if not current:
+        return "No current actor found."
+        
     # Skip dead/fled
     while current.status != "active":
         combat.turn_index += 1
         if combat.turn_index >= len(combat.combatants):
             combat.turn_index = 0
             combat.round += 1
+            current = combat.current_actor
+            if current:
+                return f"Round {combat.round} begins! It is {current.name}'s turn."
+            else:
+                return f"Round {combat.round} begins!"
+        
         current = combat.current_actor
+        if not current:
+            return "No current actor found."
         
     state.save_all()
     return f"It is {current.name}'s turn."
