@@ -25,17 +25,22 @@ class SyncGameState:
         """Ensure data is loaded from storage."""
         if not self._loaded:
             import asyncio
-            # Create event loop if none exists
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            import concurrent.futures
             
-            # Load data synchronously
-            self._character = loop.run_until_complete(self._async_state.character)
-            self._world = loop.run_until_complete(self._async_state.world)
-            self._combat = loop.run_until_complete(self._async_state.combat)
+            def load_data():
+                """Load data in a thread to avoid event loop conflicts."""
+                async def _load():
+                    char = await self._async_state.character
+                    world = await self._async_state.world
+                    combat = await self._async_state.combat
+                    return char, world, combat
+                return asyncio.run(_load())
+            
+            # Run in a thread pool to avoid event loop conflicts
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(load_data)
+                self._character, self._world, self._combat = future.result()
+            
             self._loaded = True
     
     @property
@@ -60,12 +65,15 @@ class SyncGameState:
         """Save character data."""
         self._character = character
         import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_state.save_character(character))
+        import concurrent.futures
+        
+        def save_data():
+            async def _save():
+                await self._async_state.save_character(character)
+            asyncio.run(_save())
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(save_data)
     
     def set_character(self, character: Character) -> None:
         """Set character data without saving."""
@@ -75,33 +83,42 @@ class SyncGameState:
         """Save world state."""
         self._world = world
         import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_state.save_world(world))
+        import concurrent.futures
+        
+        def save_data():
+            async def _save():
+                await self._async_state.save_world(world)
+            asyncio.run(_save())
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(save_data)
     
     def save_combat(self, combat: CombatState) -> None:
         """Save combat state."""
         self._combat = combat
         import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_state.save_combat(combat))
+        import concurrent.futures
+        
+        def save_data():
+            async def _save():
+                await self._async_state.save_combat(combat)
+            asyncio.run(_save())
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(save_data)
     
     def save_all(self) -> None:
         """Save all cached data."""
         import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_state.save_all())
+        import concurrent.futures
+        
+        def save_data():
+            async def _save():
+                await self._async_state.save_all()
+            asyncio.run(_save())
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(save_data)
 
 
 def get_game_state(user_id: str = "default", campaign_id: str = "default") -> SyncGameState:
