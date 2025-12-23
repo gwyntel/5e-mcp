@@ -1,6 +1,6 @@
 from typing import List, Dict
-from ..models.monster import Monster
-from .monster import generate_monster
+from dnd_mcp_server.models.monster import Monster
+from dnd_mcp_server.generators.monster import generate_monster
 
 def calculate_encounter_difficulty(player_level: int, total_monster_cr: float) -> str:
     """Evaluate difficulty for a SOLO player (buffed/heroic)."""

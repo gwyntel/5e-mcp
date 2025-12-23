@@ -1,6 +1,6 @@
 from typing import Dict, Any, Literal, Optional, cast
-from ..persistence.state import get_game_state
-# from ..models.character import Character # Imported via persistence
+from dnd_mcp_server.storage.compat import get_game_state
+from dnd_mcp_server.models.character import Character
 
 def get_character_sheet(campaign_id: str = "default") -> str:
     """
@@ -488,7 +488,7 @@ def create_character(
         inventory=inv
     )
     
-    state.character = new_char
+    state.set_character(new_char)
     state.save_all()
     
     return f"Character {name} created successfully! (HP: {base_hp}, AC: {ac})"

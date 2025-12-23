@@ -1,5 +1,5 @@
 import uuid
-from ..models.item import Item, ItemIdentity
+from dnd_mcp_server.models.item import Item, ItemIdentity
 
 def generate_magic_item(rarity: str, concept: str) -> Item:
     """Generates a random item."""

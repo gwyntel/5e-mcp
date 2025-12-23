@@ -1,5 +1,5 @@
 from typing import Dict, Any, List, Literal
-from ..persistence.state import get_game_state
+from dnd_mcp_server.persistence.state import get_game_state
 
 def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
     """

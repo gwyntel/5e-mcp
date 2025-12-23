@@ -1,6 +1,6 @@
 from typing import Literal
-from ..persistence.state import get_game_state
-from .dice import roll_dice
+from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.tools.dice import roll_dice
 import random
 
 def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, dc: int = 10, advantage: bool = False, campaign_id: str = "default") -> str:
@@ -37,11 +37,11 @@ def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, d
         # Add proficiency if proficient
         prof_bonus = getattr(char.skills, skill_or_ability.lower(), None)
         # The models/character.py schema says skills are Optional[int].
-        # If set, it's the *total bonus*? Or just the proficiency flag?
+        # If set, it's *total bonus*? Or just proficiency flag?
         # "athletics": 5 implies total bonus.
-        # If the user model stores the TOTAL bonus in skills, we just use that.
+        # If user model stores TOTAL bonus in skills, we just use that.
         # If it stores *proficiency* (like a boolean), we calculate.
-        # The prompt says: "athletics": 5 ... # Proficient only". This implies the value IS the bonus.
+        # The prompt says: "athletics": 5 ... # Proficient only". This implies value IS the bonus.
 
         total_bonus = prof_bonus if prof_bonus is not None else mod
 

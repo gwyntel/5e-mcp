@@ -6,7 +6,7 @@ to improve reliability when using local 7B-13B models.
 """
 
 from typing import Dict, Any, List, Optional
-from .schemas import validate_params, get_validation_tips
+from dnd_mcp_server.schemas import validate_params, get_validation_tips
 
 class ValidationError(Exception):
     """Custom exception for validation errors with helpful messages."""
@@ -16,7 +16,7 @@ def validate_tool_call(tool_name: str, params: Dict[str, Any]) -> None:
     """
     Validate tool parameters and raise ValidationError with helpful message if invalid.
     """
-    from .schemas import ALL_SCHEMAS
+    from dnd_mcp_server.schemas import ALL_SCHEMAS
     
     if tool_name not in ALL_SCHEMAS:
         raise ValidationError(f"Unknown tool '{tool_name}'. Available tools: {', '.join(ALL_SCHEMAS.keys())}")
@@ -70,7 +70,7 @@ def validate_combat_state(campaign_id: str = "default") -> None:
     """
     Validate that combat state is consistent and provide helpful errors.
     """
-    from .persistence.state import get_game_state
+    from dnd_mcp_server.persistence.state import get_game_state
     
     state = get_game_state(campaign_id)
     if not state.character:
@@ -90,7 +90,7 @@ def validate_character_state(campaign_id: str = "default") -> None:
     """
     Validate character state and provide context-aware error messages.
     """
-    from .persistence.state import get_game_state
+    from dnd_mcp_server.persistence.state import get_game_state
     
     state = get_game_state(campaign_id)
     if not state.character:
@@ -170,7 +170,7 @@ def validate_combat_action(action: str, params: Dict[str, Any]) -> None:
     """
     Validate combat-specific actions with context awareness.
     """
-    from .persistence.state import get_game_state
+    from dnd_mcp_server.persistence.state import get_game_state
     
     state = get_game_state(params.get("campaign_id", "default"))
     
@@ -205,7 +205,7 @@ def validate_spell_casting(params: Dict[str, Any]) -> None:
     """
     Validate spell casting with resource management awareness.
     """
-    from .persistence.state import get_game_state
+    from dnd_mcp_server.persistence.state import get_game_state
     
     state = get_game_state(params.get("campaign_id", "default"))
     

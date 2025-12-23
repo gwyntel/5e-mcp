@@ -1,10 +1,10 @@
 from typing import List, Dict, Any, Optional
 import random
-from ..persistence.state import get_game_state
-from ..models.combat import Combatant, CombatState
-from ..tools.dice import roll_initiative, roll_dice
+from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.models.combat import Combatant, CombatState
+from dnd_mcp_server.tools.dice import roll_initiative, roll_dice
 
-from .lookup import get_monster_data
+from dnd_mcp_server.tools.lookup import get_monster_data
 
 def start_combat(entities: List[str], campaign_id: str = "default") -> str:
     """
@@ -196,7 +196,7 @@ def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool =
             
     elif attacker.type == "monster":
         # Fetch monster data to check specific actions
-        from .lookup import get_monster_data
+        from dnd_mcp_server.tools.lookup import get_monster_data
         data = get_monster_data(attacker.name)
         if data and "actions" in data:
             # Look for action name
@@ -258,32 +258,6 @@ def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool =
         result_str += "MISS!"
         
     return result_str
-
-def deal_damage(target_id: str, amount: int, type: str, campaign_id: str = "default") -> str:
-    """
-    Apply damage to combat target. Handles death/unconsciousness when HP reaches 0.
-    Example: deal_damage("goblin_1", 8, "slashing") deals 8 slashing damage to goblin.
-    """
-    state = get_game_state(campaign_id)
-    combat = state.combat
-    target = next((c for c in combat.combatants if c.id == target_id), None)
-    
-    if not target: return f"Target {target_id} not found."
-    
-    target.hp -= amount
-    msg = f"{target.name} takes {amount} {type} damage. HP: {target.hp}/{target.max_hp}"
-    
-    if target.hp <= 0:
-        target.hp = 0
-        target.status = "unconscious" if target.type == "player" else "dead"
-        msg += f"\n{target.name} is {target.status.upper()}!"
-        
-    # Sync with character model if player
-    if target.type == "player" and state.character:
-        state.character.health.current_hp = target.hp
-        
-    state.save_all()
-    return msg
 
 def end_combat(campaign_id: str = "default") -> str:
     """

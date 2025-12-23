@@ -1,4 +1,4 @@
-from ..persistence.state import get_game_state
+from dnd_mcp_server.persistence.state import get_game_state
 from typing import Literal
 
 def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:

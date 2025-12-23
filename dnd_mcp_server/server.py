@@ -1,18 +1,18 @@
 from fastmcp import FastMCP
 from typing import Literal, List, Dict, Any
 
-# Import Tools
-from .tools.dice import roll_dice, roll_initiative
-from .tools.character import (
+# Import Tools with absolute imports
+from dnd_mcp_server.tools.dice import roll_dice, roll_initiative
+from dnd_mcp_server.tools.character import (
     get_character_sheet, update_hp, update_stat, add_experience,
     use_hit_dice, manage_conditions,
     calculate_ac, calculate_modifier, get_proficiency_bonus, create_character
 )
-from .tools.inventory import get_inventory, add_item, remove_item, equip_item, unequip_item, add_gold, remove_gold
-from .tools.combat import start_combat, roll_initiative_for_all, get_initiative_order, next_turn, make_attack, end_combat
-from .generators.monster import generate_monster
-from .generators.item import generate_magic_item
-from .generators.world import generate_location
+from dnd_mcp_server.tools.inventory import get_inventory, add_item, remove_item, equip_item, unequip_item, add_gold, remove_gold
+from dnd_mcp_server.tools.combat import start_combat, roll_initiative_for_all, get_initiative_order, next_turn, make_attack, end_combat
+from dnd_mcp_server.generators.monster import generate_monster
+from dnd_mcp_server.generators.item import generate_magic_item
+from dnd_mcp_server.generators.world import generate_location
 
 # Initialize FastMCP server
 mcp = FastMCP("Solo D&D 5e Server")
@@ -52,25 +52,25 @@ mcp.tool()(make_attack)
 mcp.tool()(end_combat)
 
 # --- Spellcasting Tools ---
-from .tools.spells import get_spell_slots, cast_spell
+from dnd_mcp_server.tools.spells import get_spell_slots, cast_spell
 # prepare_spell removed - functionality integrated into cast_spell
 # use_spell_slot is removed from exposed tools per request (avail internally)
 mcp.tool()(get_spell_slots)
 mcp.tool()(cast_spell)
 
 # --- Rest Tools ---
-from .tools.rest import rest
+from dnd_mcp_server.tools.rest import rest
 mcp.tool()(rest) # Consolidated
 
 # --- Check & Save Tools ---
-from .tools.checks import make_check, make_death_save, stabilize_character
+from dnd_mcp_server.tools.checks import make_check, make_death_save, stabilize_character
 # make_skill_check and make_ability_check removed - consolidated into make_check
 mcp.tool()(make_check)
 mcp.tool()(make_death_save)
 mcp.tool()(stabilize_character)
 
 # --- Lookup Tools ---
-from .tools.lookup import lookup_monster, lookup_spell, lookup_item, get_random_monster, lookup_feat, get_spell_list
+from dnd_mcp_server.tools.lookup import lookup_monster, lookup_spell, lookup_item, get_random_monster, lookup_feat, get_spell_list
 mcp.tool()(lookup_monster)
 mcp.tool()(lookup_spell)
 mcp.tool()(lookup_item)
@@ -109,7 +109,7 @@ def generator_location_tool(type: str, difficulty: str) -> str:
 
 
 # --- Session Tools ---
-from .tools.session import load_session_history, save_session_summary
+from dnd_mcp_server.tools.session import load_session_history, save_session_summary
 mcp.tool()(load_session_history)
 mcp.tool()(save_session_summary)
 

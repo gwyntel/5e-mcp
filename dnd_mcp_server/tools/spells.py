@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional
-from ..persistence.state import get_game_state
-from ..models.character import Condition
+from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.models.character import Condition
 
 def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
     """

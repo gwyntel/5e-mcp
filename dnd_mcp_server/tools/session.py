@@ -1,7 +1,7 @@
 from typing import Dict, List
 import json
 import os
-from ..persistence.state import get_campaign_dir, ensure_campaign_dir
+from dnd_mcp_server.persistence.state import get_campaign_dir, ensure_campaign_dir
 
 def get_session_file_path(campaign_id: str) -> str:
     return os.path.join(get_campaign_dir(campaign_id), "session_log.json")

@@ -1,7 +1,7 @@
 import random
 import uuid
-from ..models.monster import Monster, MonsterIdentity, MonsterStats, MonsterHealth, MonsterDefense, MonsterOffense, MonsterAction
-# from ..models.monster import MonsterHitDice 
+from dnd_mcp_server.models.monster import Monster, MonsterIdentity, MonsterStats, MonsterHealth, MonsterDefense, MonsterOffense, MonsterAction
+# from dnd_mcp_server.models.monster import MonsterHitDice 
 
 # Simplified CR Table (AC, HP, Attack, Damage)
 CR_TABLE = {

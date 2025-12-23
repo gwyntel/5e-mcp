@@ -1,5 +1,5 @@
 import uuid
-from ..models.world import Location, LocationIdentity
+from dnd_mcp_server.models.world import Location, LocationIdentity
 
 def generate_location(type: str, difficulty: str) -> Location:
     """Generates a location."""

@@ -2,11 +2,11 @@ import json
 import os
 from typing import Optional, Dict
 
-from ..models.character import Character
-from ..models.world import WorldState
-from ..models.item import Item
-from ..models.monster import Monster
-from ..models.combat import CombatState
+from dnd_mcp_server.models.character import Character
+from dnd_mcp_server.models.world import WorldState
+from dnd_mcp_server.models.item import Item
+from dnd_mcp_server.models.monster import Monster
+from dnd_mcp_server.models.combat import CombatState
 
 # Constants for file paths
 # Use absolute path to ensure write access and persistence location
