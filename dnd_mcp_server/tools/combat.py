@@ -37,7 +37,8 @@ async def start_combat(entities: List[str], campaign_id: str = "default") -> str
     
     for entity_ref in entities:
         # Check if it's the player ID (skip)
-        if await state.character and entity_ref == state.character.id: 
+        char = await state.character
+        if char and entity_ref == char.id: 
             continue
             
         # Unique ID handling
@@ -88,8 +89,10 @@ async def roll_initiative_for_all(campaign_id: str = "default") -> str:
         # Ideally fetch dex mod from character/monster model.
         # Simplified:
         mod = 0
-        if c.type == "player" and await state.character:
-            mod = state.character.defense.initiative_mod
+        if c.type == "player":
+            char = await state.character
+            if char:
+                mod = char.defense.initiative_mod
         
         init = roll_initiative(mod)
         c.initiative = init
@@ -185,9 +188,11 @@ async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: 
     attack_bonus = 4
     damage_dice = "1d6+2"
     
-    if attacker.type == "player" and await state.character:
-        # Find weapon in attacks
-        atk_meta = next((a for a in state.character.combat.attacks if a.name.lower() == weapon.lower()), None)
+    if attacker.type == "player":
+        char = await state.character
+        if char:
+            # Find weapon in attacks
+            atk_meta = next((a for a in char.combat.attacks if a.name.lower() == weapon.lower()), None)
         if atk_meta:
             attack_bonus = atk_meta.bonus
             damage_dice = atk_meta.damage
@@ -265,6 +270,7 @@ async def end_combat(campaign_id: str = "default") -> str:
     Example: end_combat() returns "Combat ended." and resets combat flags.
     """
     state = get_game_state(campaign_id)
-    state.combat.active = False
+    combat = await state.combat
+    combat.active = False
     await state.save_all()
     return "Combat ended."

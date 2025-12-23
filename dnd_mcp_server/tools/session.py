@@ -5,10 +5,24 @@ from pathlib import Path
 
 def get_campaign_dir(campaign_id: str) -> Path:
     """Get campaign directory path."""
-    # Use save_data directory from environment or default
-    base_dir = Path(os.getenv("STORAGE_DISK_DIRECTORY", "./save_data"))
+    # Use save_data directory from environment or default to temp directory
+    disk_dir = os.getenv("STORAGE_DISK_DIRECTORY")
+    if disk_dir:
+        base_dir = Path(disk_dir)
+    else:
+        # For memory backend, use a temp directory
+        import tempfile
+        base_dir = Path(tempfile.gettempdir()) / "5e-mcp-sessions"
+    
     campaign_dir = base_dir / campaign_id
-    campaign_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        campaign_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        # If we can't create the directory, use temp
+        import tempfile
+        campaign_dir = Path(tempfile.gettempdir()) / "5e-mcp-sessions" / campaign_id
+        campaign_dir.mkdir(parents=True, exist_ok=True)
+    
     return campaign_dir
 
 def get_session_file_path(campaign_id: str) -> str:

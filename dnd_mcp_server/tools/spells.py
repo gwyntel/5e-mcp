@@ -70,7 +70,7 @@ async def cast_spell(spell_name: str, level: int, concentration: bool = False, p
     # (Cantrips level 0 don't consume)
     msg = ""
     if level > 0:
-        res = use_spell_slot(level, campaign_id=campaign_id)
+        res = await use_spell_slot(level, campaign_id=campaign_id)
         if "Error" in res:
             return res
         msg += res + "\n"
