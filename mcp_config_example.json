@@ -3,11 +3,10 @@
         "solo-dnd": {
             "command": "python3",
             "args": [
-                "-m",
-                "dnd_mcp_server.server"
+                "main.py"
             ],
             "env": {
-                "PYTHONPATH": "/Users/gwyn/projects/5e-mcp/gemini"
+                "DND_DATA_DIR": "./save_data"
             },
             "disabled": false,
             "autoApprove": [

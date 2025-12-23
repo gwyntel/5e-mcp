@@ -9,8 +9,8 @@ from dnd_mcp_server.models.monster import Monster
 from dnd_mcp_server.models.combat import CombatState
 
 # Constants for file paths
-# Use absolute path to ensure write access and persistence location
-DATA_BASE_DIR = "/Users/gwyn/projects/5e-mcp/gemini/save_data"
+# Use environment variable for data directory (set by main.py or config)
+DATA_BASE_DIR = os.environ.get("DND_DATA_DIR")
 
 def get_campaign_dir(campaign_id: str) -> str:
     return os.path.join(DATA_BASE_DIR, campaign_id)
