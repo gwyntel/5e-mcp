@@ -63,6 +63,9 @@ class DiskStorage(StorageInterface):
         file_path = self._get_file_path(key)
         try:
             import json
+            # Ensure parent directory exists
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
             data: dict[str, str | float] = {"value": value}
             if ttl:
                 import time

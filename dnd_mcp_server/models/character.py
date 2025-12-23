@@ -11,6 +11,7 @@ class CharacterIdentity(BaseModel):
     xp: int = 0
 
 class AbilityScores(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     str: int
     dex: int
     con: int
@@ -41,6 +42,7 @@ class Health(BaseModel):
     death_saves: DeathSaves = Field(default_factory=DeathSaves)
 
 class Saves(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     str: Optional[int] = None
     dex: Optional[int] = None
     con: Optional[int] = None
