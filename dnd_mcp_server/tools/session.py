@@ -5,24 +5,14 @@ from pathlib import Path
 
 def get_campaign_dir(campaign_id: str) -> Path:
     """Get campaign directory path."""
-    # Use save_data directory from environment or default to temp directory
+    # Session persistence only works with disk storage backend
     disk_dir = os.getenv("STORAGE_DISK_DIRECTORY")
-    if disk_dir:
-        base_dir = Path(disk_dir)
-    else:
-        # For memory backend, use a temp directory
-        import tempfile
-        base_dir = Path(tempfile.gettempdir()) / "5e-mcp-sessions"
+    if not disk_dir:
+        raise ValueError("Session persistence requires STORAGE_BACKEND=disk. Memory backend does not support session logs.")
     
+    base_dir = Path(disk_dir)
     campaign_dir = base_dir / campaign_id
-    try:
-        campaign_dir.mkdir(parents=True, exist_ok=True)
-    except Exception as e:
-        # If we can't create the directory, use temp
-        import tempfile
-        campaign_dir = Path(tempfile.gettempdir()) / "5e-mcp-sessions" / campaign_id
-        campaign_dir.mkdir(parents=True, exist_ok=True)
-    
+    campaign_dir.mkdir(parents=True, exist_ok=True)
     return campaign_dir
 
 def get_session_file_path(campaign_id: str) -> str:
@@ -33,7 +23,11 @@ async def load_session_history(campaign_id: str = "default") -> str:
     Load all previous session summaries for campaign continuity.
     Example: load_session_history() returns formatted session logs with dates and summaries.
     """
-    path = get_session_file_path(campaign_id)
+    try:
+        path = get_session_file_path(campaign_id)
+    except ValueError as e:
+        return str(e)
+    
     if not os.path.exists(path):
         return "No session history found."
         
@@ -57,7 +51,10 @@ async def save_session_summary(summary: str, campaign_id: str = "default") -> st
     Save narrative session summary to campaign log for story continuity.
     Example: save_session_summary("Defeated goblins, found treasure") saves session summary.
     """
-    path = get_session_file_path(campaign_id)
+    try:
+        path = get_session_file_path(campaign_id)
+    except ValueError as e:
+        return str(e)
     
     data = {}
     if os.path.exists(path):
