@@ -1,40 +1,25 @@
 from typing import Dict, List
 import json
-import os
-from pathlib import Path
-
-def get_campaign_dir(campaign_id: str) -> Path:
-    """Get campaign directory path."""
-    # Session persistence only works with disk storage backend
-    disk_dir = os.getenv("STORAGE_DISK_DIRECTORY")
-    if not disk_dir:
-        raise ValueError("Session persistence requires STORAGE_BACKEND=disk. Memory backend does not support session logs.")
-    
-    base_dir = Path(disk_dir)
-    campaign_dir = base_dir / campaign_id
-    campaign_dir.mkdir(parents=True, exist_ok=True)
-    return campaign_dir
-
-def get_session_file_path(campaign_id: str) -> str:
-    return str(get_campaign_dir(campaign_id) / "session_log.json")
+import datetime
+from dnd_mcp_server.storage.game_state import get_game_state
 
 async def load_session_history(campaign_id: str = "default") -> str:
     """
     Load all previous session summaries for campaign continuity.
     Example: load_session_history() returns formatted session logs with dates and summaries.
     """
-    try:
-        path = get_session_file_path(campaign_id)
-    except ValueError as e:
-        return str(e)
+    state = get_game_state(campaign_id=campaign_id)
     
-    if not os.path.exists(path):
+    # Session data is stored as a JSON string in storage
+    session_key = f"sessions:{campaign_id}"
+    data_json = await state.storage.storage.get(session_key)
+    
+    if not data_json:
         return "No session history found."
-        
+    
     try:
-        with open(path, 'r') as f:
-            data = json.load(f)
-            
+        data = json.loads(data_json)
+        
         # Format for readability
         output = []
         for session_id, info in data.items():
@@ -51,31 +36,30 @@ async def save_session_summary(summary: str, campaign_id: str = "default") -> st
     Save narrative session summary to campaign log for story continuity.
     Example: save_session_summary("Defeated goblins, found treasure") saves session summary.
     """
-    try:
-        path = get_session_file_path(campaign_id)
-    except ValueError as e:
-        return str(e)
+    state = get_game_state(campaign_id=campaign_id)
+    
+    # Load existing session data
+    session_key = f"sessions:{campaign_id}"
+    data_json = await state.storage.storage.get(session_key)
     
     data = {}
-    if os.path.exists(path):
+    if data_json:
         try:
-            with open(path, 'r') as f:
-                data = json.load(f)
+            data = json.loads(data_json)
         except:
-            pass # Start fresh if error
-            
-    # generate session key
-    import datetime
+            pass  # Start fresh if error
+    
+    # Generate session key
     session_num = len(data) + 1
-    session_key = f"session_{session_num}"
+    session_id = f"session_{session_num}"
     today = datetime.date.today().isoformat()
     
-    data[session_key] = {
+    data[session_id] = {
         "date": today,
         "summary": summary
     }
     
-    with open(path, 'w') as f:
-        json.dump(data, f, indent=2)
-        
-    return f"Session summary saved as {session_key}."
+    # Save back to storage
+    await state.storage.storage.set(session_key, json.dumps(data))
+    
+    return f"Session summary saved as {session_id}."
