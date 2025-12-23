@@ -6,14 +6,23 @@
                 "main.py"
             ],
             "env": {
+                // Data directory for saving game state
                 "DND_DATA_DIR": "./save_data",
+                // Storage backend: memory, disk, or redis
                 "STORAGE_BACKEND": "${env:STORAGE_BACKEND}",
+                // Disk storage directory (used when STORAGE_BACKEND=disk)
                 "STORAGE_DISK_DIRECTORY": "${env:STORAGE_DISK_DIRECTORY}",
+                // Redis host (used when STORAGE_BACKEND=redis)
                 "STORAGE_REDIS_HOST": "${env:STORAGE_REDIS_HOST}",
+                // Redis port (used when STORAGE_BACKEND=redis)
                 "STORAGE_REDIS_PORT": "${env:STORAGE_REDIS_PORT}",
+                // Redis password (used when STORAGE_BACKEND=redis)
                 "STORAGE_REDIS_PASSWORD": "${env:STORAGE_REDIS_PASSWORD}",
+                // Redis database number (used when STORAGE_BACKEND=redis)
                 "STORAGE_REDIS_DB": "${env:STORAGE_REDIS_DB}",
+                // Encryption key for sensitive data (base64 encoded)
                 "STORAGE_ENCRYPTION_KEY": "${env:STORAGE_ENCRYPTION_KEY}",
+                // Namespace prefix for all storage keys
                 "STORAGE_NAMESPACE_PREFIX": "${env:STORAGE_NAMESPACE_PREFIX}"
             },
             "disabled": false,
