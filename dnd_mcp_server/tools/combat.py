@@ -1,18 +1,18 @@
 from typing import List, Dict, Any, Optional
 import random
-from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.storage.game_state import get_game_state
 from dnd_mcp_server.models.combat import Combatant, CombatState
 from dnd_mcp_server.tools.dice import roll_initiative, roll_dice
 
 from dnd_mcp_server.tools.lookup import get_monster_data
 
-def start_combat(entities: List[str], campaign_id: str = "default") -> str:
+async def start_combat(entities: List[str], campaign_id: str = "default") -> str:
     """
     Start combat with specified monsters. Initializes combat state and adds combatants.
     Example: start_combat(["Goblin", "2 Wolves"]) begins combat with 1 goblin and 2 wolves.
     """
     state = get_game_state(campaign_id)
-    combat = state.combat
+    combat = await state.combat
     if combat.active:
         return "Combat already active. End current combat first."
     
@@ -21,8 +21,8 @@ def start_combat(entities: List[str], campaign_id: str = "default") -> str:
     combat.combatants = []
     
     # Add Player
-    if state.character:
-        char = state.character
+    if await state.character:
+        char = await state.character
         pc = Combatant(
             id=char.id,
             name=char.identity.name,
@@ -37,7 +37,7 @@ def start_combat(entities: List[str], campaign_id: str = "default") -> str:
     
     for entity_ref in entities:
         # Check if it's the player ID (skip)
-        if state.character and entity_ref == state.character.id: 
+        if await state.character and entity_ref == state.character.id: 
             continue
             
         # Unique ID handling
@@ -69,16 +69,16 @@ def start_combat(entities: List[str], campaign_id: str = "default") -> str:
         )
         combat.combatants.append(mob)
 
-    state.save_all()
+    await state.save_all()
     return f"Combat started with {len(combat.combatants)} combatants. Round 1."
 
-def roll_initiative_for_all(campaign_id: str = "default") -> str:
+async def roll_initiative_for_all(campaign_id: str = "default") -> str:
     """
     Roll initiative for all combatants and sort turn order. Call after starting combat.
     Example: roll_initiative_for_all() returns "Initiative Rolled:\nAria: 18\nGoblin: 12"
     """
     state = get_game_state(campaign_id)
-    combat = state.combat
+    combat = await state.combat
     if not combat.active:
         return "No active combat."
         
@@ -88,7 +88,7 @@ def roll_initiative_for_all(campaign_id: str = "default") -> str:
         # Ideally fetch dex mod from character/monster model.
         # Simplified:
         mod = 0
-        if c.type == "player" and state.character:
+        if c.type == "player" and await state.character:
             mod = state.character.defense.initiative_mod
         
         init = roll_initiative(mod)
@@ -99,16 +99,16 @@ def roll_initiative_for_all(campaign_id: str = "default") -> str:
     combat.combatants.sort(key=lambda x: x.initiative, reverse=True)
     combat.turn_index = 0
     
-    state.save_all()
+    await state.save_all()
     return "Initiative Rolled:\n" + "\n".join(results)
 
-def get_initiative_order(campaign_id: str = "default") -> str:
+async def get_initiative_order(campaign_id: str = "default") -> str:
     """
     Get current turn order with HP status and whose turn it is. Use each round.
     Example: get_initiative_order() shows "-> Aria (pc_abc123) - Init: 18, HP: 15/15"
     """
     state = get_game_state(campaign_id)
-    combat = state.combat
+    combat = await state.combat
     if not combat.active:
         return "No active combat."
         
@@ -119,13 +119,13 @@ def get_initiative_order(campaign_id: str = "default") -> str:
         
     return "Turn Order:\n" + "\n".join(order)
 
-def next_turn(campaign_id: str = "default") -> str:
+async def next_turn(campaign_id: str = "default") -> str:
     """
     Advance to next combatant's turn. Automatically increments rounds when order loops.
     Example: next_turn() returns "It is Goblin's turn." or "Round 2 begins!"
     """
     state = get_game_state(campaign_id)
-    combat = state.combat
+    combat = await state.combat
     if not combat.active:
         return "No active combat."
     
@@ -162,16 +162,16 @@ def next_turn(campaign_id: str = "default") -> str:
         if not current:
             return "No current actor found."
         
-    state.save_all()
+    await state.save_all()
     return f"It is {current.name}'s turn."
 
-def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool = False, campaign_id: str = "default") -> str:
+async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool = False, campaign_id: str = "default") -> str:
     """
     Resolve attack roll vs target AC. Returns hit/miss and damage but doesn't apply HP.
     Example: make_attack("pc_abc123", "goblin_1", "Longsword") rolls attack vs goblin.
     """
     state = get_game_state(campaign_id)
-    combat = state.combat
+    combat = await state.combat
     
     # Validation
     attacker = next((c for c in combat.combatants if c.id == attacker_id), None)
@@ -185,7 +185,7 @@ def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool =
     attack_bonus = 4
     damage_dice = "1d6+2"
     
-    if attacker.type == "player" and state.character:
+    if attacker.type == "player" and await state.character:
         # Find weapon in attacks
         atk_meta = next((a for a in state.character.combat.attacks if a.name.lower() == weapon.lower()), None)
         if atk_meta:
@@ -259,12 +259,12 @@ def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool =
         
     return result_str
 
-def end_combat(campaign_id: str = "default") -> str:
+async def end_combat(campaign_id: str = "default") -> str:
     """
     End current combat encounter and clear temporary combat state.
     Example: end_combat() returns "Combat ended." and resets combat flags.
     """
     state = get_game_state(campaign_id)
     state.combat.active = False
-    state.save_all()
+    await state.save_all()
     return "Combat ended."

@@ -1,12 +1,20 @@
 from typing import Dict, List
 import json
 import os
-from dnd_mcp_server.persistence.state import get_campaign_dir, ensure_campaign_dir
+from pathlib import Path
+
+def get_campaign_dir(campaign_id: str) -> Path:
+    """Get campaign directory path."""
+    # Use save_data directory from environment or default
+    base_dir = Path(os.getenv("STORAGE_DISK_DIRECTORY", "./save_data"))
+    campaign_dir = base_dir / campaign_id
+    campaign_dir.mkdir(parents=True, exist_ok=True)
+    return campaign_dir
 
 def get_session_file_path(campaign_id: str) -> str:
-    return os.path.join(get_campaign_dir(campaign_id), "session_log.json")
+    return str(get_campaign_dir(campaign_id) / "session_log.json")
 
-def load_session_history(campaign_id: str = "default") -> str:
+async def load_session_history(campaign_id: str = "default") -> str:
     """
     Load all previous session summaries for campaign continuity.
     Example: load_session_history() returns formatted session logs with dates and summaries.
@@ -30,12 +38,11 @@ def load_session_history(campaign_id: str = "default") -> str:
     except Exception as e:
         return f"Error loading history: {str(e)}"
 
-def save_session_summary(summary: str, campaign_id: str = "default") -> str:
+async def save_session_summary(summary: str, campaign_id: str = "default") -> str:
     """
     Save narrative session summary to campaign log for story continuity.
     Example: save_session_summary("Defeated goblins, found treasure") saves session summary.
     """
-    ensure_campaign_dir(campaign_id)
     path = get_session_file_path(campaign_id)
     
     data = {}

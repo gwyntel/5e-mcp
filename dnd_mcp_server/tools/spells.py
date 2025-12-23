@@ -1,25 +1,25 @@
 from typing import Dict, Any, Optional
-from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.storage.game_state import get_game_state
 from dnd_mcp_server.models.character import Condition
 
-def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
+async def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
     """
     Get available spell slots by level with current/max usage.
     Example: get_spell_slots() returns {"1": {"current": 2, "max": 4}, "2": {...}}
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char or not char.spellcasting:
         return {"error": "No spellcasting ability."}
     return {k: v.model_dump() for k, v in char.spellcasting.slots.items()}
 
-def use_spell_slot(level: int, campaign_id: str = "default") -> str:
+async def use_spell_slot(level: int, campaign_id: str = "default") -> str:
     """
     Consume one spell slot of specified level for casting.
     Example: use_spell_slot(2) consumes one level 2 spell slot.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char or not char.spellcasting:
         return "Error: No spellcasting ability."
         
@@ -30,34 +30,34 @@ def use_spell_slot(level: int, campaign_id: str = "default") -> str:
     slot = char.spellcasting.slots[lvl_str]
     if slot.current > 0:
         slot.current -= 1
-        state.save_all()
+        await state.save_all()
         return f"Used level {level} slot. Remaining: {slot.current}/{slot.max}."
     else:
         return f"Error: No level {level} slots remaining."
 
-def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
+async def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
     """
     Add spell to prepared spells list for classes that require preparation.
     Example: prepare_spell("Fireball") adds Fireball to prepared spells.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char or not char.spellcasting:
         return "Error: No spellcasting ability."
 
     if spell_name not in char.spellcasting.prepared:
         char.spellcasting.prepared.append(spell_name)
-        state.save_all()
+        await state.save_all()
         return f"Prepared spell: {spell_name}."
     return f"Spell {spell_name} is already prepared."
 
-def cast_spell(spell_name: str, level: int, concentration: bool = False, prepare: bool = False, campaign_id: str = "default") -> str:
+async def cast_spell(spell_name: str, level: int, concentration: bool = False, prepare: bool = False, campaign_id: str = "default") -> str:
     """
     Cast spell consuming slot, handling concentration and optional preparation.
     Example: cast_spell("Fireball", 3, True) casts Fireball with concentration.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char or not char.spellcasting:
         return "Error: No spellcasting ability."
     
@@ -102,5 +102,5 @@ def cast_spell(spell_name: str, level: int, concentration: bool = False, prepare
         char.conditions.append(new_cond)
         msg += f"Now concentrating on {spell_name}."
         
-    state.save_all()
+    await state.save_all()
     return f"{msg} Cast {spell_name} at level {level}."

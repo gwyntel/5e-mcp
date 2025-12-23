@@ -1,13 +1,13 @@
-from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.storage.game_state import get_game_state
 from typing import Literal
 
-def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:
+async def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:
     """
     Perform short (1 hour) or long (8 hours) rest to recover resources.
     Example: rest("long") performs long rest, restoring HP and spell slots.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char: return "No character."
     
     if type == "short":
@@ -18,7 +18,7 @@ def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:
                 usage.uses = usage.max
                 restored.append(name)
         
-        state.save_all()
+        await state.save_all()
         msg = "Short rest complete."
         if restored:
             msg += f" Restored features: {', '.join(restored)}."
@@ -59,7 +59,7 @@ def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:
                 char.conditions.remove(exh)
                 exh_msg = " Exhaustion removed."
                 
-        state.save_all()
+        await state.save_all()
         
         return (
             f"Long rest complete. HP fully restored. Spell slots reset. "

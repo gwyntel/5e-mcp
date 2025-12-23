@@ -1,15 +1,15 @@
 from typing import Literal
-from dnd_mcp_server.persistence.state import get_game_state
+from dnd_mcp_server.storage.game_state import get_game_state
 from dnd_mcp_server.tools.dice import roll_dice
 import random
 
-def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, dc: int = 10, advantage: bool = False, campaign_id: str = "default") -> str:
+async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, dc: int = 10, advantage: bool = False, campaign_id: str = "default") -> str:
     """
     Roll d20 + modifiers for skill or ability check vs Difficulty Class.
     Example: make_check("skill", "athletics", 15) rolls Athletics check DC 15.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char: return "No character."
 
     # Map 'int' to 'intelligence' due to Pydantic alias
@@ -64,13 +64,13 @@ def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, d
     else:
         return f"Invalid check_type '{check_type}'. Use 'skill' or 'ability'."
 
-def make_death_save(campaign_id: str = "default") -> str:
+async def make_death_save(campaign_id: str = "default") -> str:
     """
     Roll death saving throw when at 0 HP. Tracks successes (3=stable) and failures (3=dead).
     Example: make_death_save() returns "Death Save Roll: 18. Success."
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char: return "No character."
     
     if char.health.current_hp > 0:
@@ -87,7 +87,7 @@ def make_death_save(campaign_id: str = "default") -> str:
         char.health.death_saves.failures = 0
         char.health.death_saves.successes = 0
         msg += "CRITICAL SUCCESS! You regain 1 HP and consciousness!"
-        state.save_all()
+        await state.save_all()
         return msg
     elif roll >= 10:
         char.health.death_saves.successes += 1
@@ -104,19 +104,19 @@ def make_death_save(campaign_id: str = "default") -> str:
     elif char.health.death_saves.failures >= 3:
         msg += " DEAD! Character has died."
         
-    state.save_all()
+    await state.save_all()
     return msg
 
-def stabilize_character(campaign_id: str = "default") -> str:
+async def stabilize_character(campaign_id: str = "default") -> str:
     """
     Stabilize dying character (0 HP), resetting death save failures to 0.
     Example: stabilize_character() returns "Character stabilized. Death saves reset."
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char: return "No character."
     
     char.health.death_saves.successes = 0
     char.health.death_saves.failures = 0
-    state.save_all()
+    await state.save_all()
     return "Character stabilized. Death saves reset."

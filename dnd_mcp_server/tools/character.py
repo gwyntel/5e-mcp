@@ -1,18 +1,19 @@
 from typing import Dict, Any, Literal, Optional, cast
-from dnd_mcp_server.storage.compat import get_game_state
+from dnd_mcp_server.storage.game_state import get_game_state
 from dnd_mcp_server.models.character import Character
 
-def get_character_sheet(campaign_id: str = "default") -> str:
+async def get_character_sheet(campaign_id: str = "default") -> str:
     """
     Get complete character sheet with stats, HP, inventory, spells. Use to check current state.
     Example: get_character_sheet("campaign1") returns character JSON with all current values.
     """
     state = get_game_state(campaign_id)
-    if not state.character:
+    character = await state.character
+    if not character:
         return '{"error": "No character found. detailed character creation needed."}'
-    return cast(str, state.character.model_dump_json(indent=2))
+    return cast(str, character.model_dump_json(indent=2))
 
-def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
+async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
     """
     Apply damage, healing, or temp HP to character or combat target. Handles death saves automatically.
     Example: update_hp(8, "damage", "goblin_1") deals 8 damage to goblin_1 in combat.
@@ -22,7 +23,7 @@ def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage"
     # Handle combat target if specified
     if target_id:
         from ..models.combat import Combatant
-        combat = state.combat
+        combat = await state.combat
         if not combat.active:
             return "No active combat."
             
@@ -40,26 +41,28 @@ def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage"
                 msg += f"\n{target.name} is {target.status.upper()}!"
                 
             # Sync with character model if player
-            if target.type == "player" and state.character:
-                state.character.health.current_hp = target.hp
+            char = await state.character
+            if target.type == "player" and char:
+                char.health.current_hp = target.hp
                 
         elif type == "healing":
             target.hp = min(target.hp + amount, target.max_hp)
             msg = f"{target.name} healed {amount} HP. Current HP: {target.hp}/{target.max_hp}"
             
             # Sync with character model if player
-            if target.type == "player" and state.character:
-                state.character.health.current_hp = target.hp
+            char = await state.character
+            if target.type == "player" and char:
+                char.health.current_hp = target.hp
                 
         elif type == "temp":
             # Temp HP for combat targets - simplified, just track in message
             msg = f"{target.name} gains {amount} temporary HP."
             
-        state.save_all()
+        await state.save_all()
         return msg
     
     # Handle player character
-    char = state.character
+    char = await state.character
     if not char:
         return "Error: No character loaded."
     
@@ -93,16 +96,16 @@ def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage"
         else:
             msg = f"New Temp HP ({amount}) not higher than current ({char.health.temp_hp}). No change."
 
-    state.save_all()
+    await state.save_all()
     return msg
 
-def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
+async def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
     """
     Permanently update an Ability Score (str, dex, con, int, wis, cha) to a new value.
     Example: update_stat("str", 16) sets Strength to 16 permanently.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char:
         return "Error: No character."
 
@@ -112,18 +115,18 @@ def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
 
     if hasattr(char.stats, actual_stat):
         setattr(char.stats, actual_stat, value)
-        state.save_all()
+        await state.save_all()
         return f"Updated {stat} to {value}."
     else:
         return f"Error: Invalid stat '{stat}'."
 
-def add_experience(xp: int, campaign_id: str = "default") -> str:
+async def add_experience(xp: int, campaign_id: str = "default") -> str:
     """
     Award Experience Points to character. Automatically detects level ups based on XP thresholds.
     Example: add_experience(150) adds 150 XP and checks for level up.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char:
         return "Error: No character."
         
@@ -157,16 +160,16 @@ def add_experience(xp: int, campaign_id: str = "default") -> str:
         msg += f"\n*** LEVEL UP! *** Character is now Level {new_level}!"
         msg += "\nRemember to increase HP and update stats manually or via tools."
     
-    state.save_all()
+    await state.save_all()
     return msg
 
-def use_hit_dice(count: int, campaign_id: str = "default") -> str:
+async def use_hit_dice(count: int, campaign_id: str = "default") -> str:
     """
     Spend Hit Dice during Short Rest to heal. Rolls dice + Con modifier for each.
     Example: use_hit_dice(2) spends 2 hit dice and heals the rolled amount.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char: return "No character."
     
     # Simple logic: assume one primary hit die type for now or find first available
@@ -204,17 +207,17 @@ def use_hit_dice(count: int, campaign_id: str = "default") -> str:
         return "No hit dice remaining or available."
         
     char.health.current_hp = min(char.health.current_hp + healed_total, char.health.max_hp)
-    state.save_all()
+    await state.save_all()
     
     return f"Spent {spent} hit dice ({', '.join(log)}). Healed {healed_total} HP. Current: {char.health.current_hp}/{char.health.max_hp}"
 
-def manage_conditions(action: Literal["apply", "remove", "check"], condition: Optional[str] = None, duration: int = 10, levels: int = 1, campaign_id: str = "default") -> str:
+async def manage_conditions(action: Literal["apply", "remove", "check"], condition: Optional[str] = None, duration: int = 10, levels: int = 1, campaign_id: str = "default") -> str:
     """
     Apply, remove, or check conditions like Prone, Poisoned, or Exhaustion on character.
     Example: manage_conditions("apply", "Prone", 5) applies Prone for 5 rounds.
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     if not char: return "No character."
     from ..models.character import Condition
 
@@ -245,17 +248,17 @@ def manage_conditions(action: Literal["apply", "remove", "check"], condition: Op
             else:
                 lvl = levels
                 char.conditions.append(Condition(name="Exhaustion", level=lvl, duration=9999))
-            state.save_all()
+            await state.save_all()
             return f"Exhaustion increased to level {lvl}."
         else:
             if existing:
                 existing.duration = max(existing.duration, duration)
-                state.save_all()
+                await state.save_all()
                 return f"Refreshed condition {condition} to {existing.duration} rounds."
             else:
                 new_cond = Condition(name=condition, duration=duration)
                 char.conditions.append(new_cond)
-                state.save_all()
+                await state.save_all()
                 return f"Applied condition {condition} for {duration} rounds."
                 
     elif action == "remove":
@@ -269,48 +272,50 @@ def manage_conditions(action: Literal["apply", "remove", "check"], condition: Op
             else:
                 existing.level = new_level
                 msg = f"Exhaustion reduced to level {new_level}."
-            state.save_all()
+            await state.save_all()
             return msg
         else:
             if not existing: return f"Condition {condition} not found."
             char.conditions = [c for c in char.conditions if c.name.lower() != condition.lower()]
-            state.save_all()
+            await state.save_all()
             return f"Removed condition {condition}."
             
     return f"Invalid action {action}."
 
-def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
+async def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
     """
     Calculate ability modifier for a stat (e.g., STR 14 gives +2 modifier).
     Example: calculate_modifier("str") returns the Strength modifier.
     """
     state = get_game_state(campaign_id)
-    if not state.character:
+    char = await state.character
+    if not char:
         return 0  # Default modifier if no character
     # Map 'int' to 'intelligence' due to Pydantic alias
     stat_mapping = {"int": "intelligence"}
     actual_stat = stat_mapping.get(stat_name.lower(), stat_name.lower())
-    score = getattr(state.character.stats, actual_stat, 10)
+    score = getattr(char.stats, actual_stat, 10)
     return (score - 10) // 2
 
-def get_proficiency_bonus(campaign_id: str = "default") -> int:
+async def get_proficiency_bonus(campaign_id: str = "default") -> int:
     """
     Get character's proficiency bonus based on level (2 at level 1, +1 every 4 levels).
     Example: get_proficiency_bonus() returns current proficiency bonus.
     """
     state = get_game_state(campaign_id)
-    if not state.character:
+    char = await state.character
+    if not char:
         return 2  # Default proficiency bonus
     # Or calculate from level: ceil(level/4) + 1
-    return state.character.stats.proficiency_bonus
+    return char.stats.proficiency_bonus
 
-def calculate_ac(campaign_id: str = "default") -> int:
+async def calculate_ac(campaign_id: str = "default") -> int:
     """
     Calculate character's Armor Class from equipped armor, shield, and Dexterity modifier.
     Example: calculate_ac() returns current AC value (e.g., 16).
     """
     state = get_game_state(campaign_id)
-    char = state.character
+    char = await state.character
     
     if not char: return 10
     
@@ -345,11 +350,11 @@ def calculate_ac(campaign_id: str = "default") -> int:
         
     # Update state
     char.defense.ac = ac
-    state.save_all()
+    await state.save_all()
     
     return ac
 
-def create_character(
+async def create_character(
     name: str, 
     race: str, 
     class_name: str, 
@@ -488,7 +493,6 @@ def create_character(
         inventory=inv
     )
     
-    state.set_character(new_char)
-    state.save_all()
+    await state.save_character(new_char)
     
     return f"Character {name} created successfully! (HP: {base_hp}, AC: {ac})"

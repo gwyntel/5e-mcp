@@ -13,24 +13,45 @@ Usage:
 
 import os
 import sys
+import logging
 from pathlib import Path
 
 # Add the project root to Python path
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Set up environment and configuration
 def setup_environment():
     """Configure environment variables and paths"""
-    # Configure data directory to use relative path
-    data_dir = PROJECT_ROOT / "save_data"
-    os.environ.setdefault("DND_DATA_DIR", str(data_dir))
+    # Load from .env file if present
+    env_file = PROJECT_ROOT / ".env"
+    if env_file.exists():
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(env_file)
+            logger.info(f"Loaded environment from {env_file}")
+        except ImportError:
+            logger.warning("python-dotenv not installed, skipping .env file")
     
-    # Create save_data directory if it doesn't exist
-    data_dir.mkdir(exist_ok=True)
+    # Configure storage backend
+    backend = os.getenv("STORAGE_BACKEND", "memory")
+    logger.info(f"Storage backend: {backend}")
     
-    print(f"Data directory: {data_dir}")
-    print(f"Project root: {PROJECT_ROOT}")
+    # Configure data directory for disk storage
+    if backend == "disk":
+        data_dir = Path(os.getenv("STORAGE_DISK_DIRECTORY", PROJECT_ROOT / "save_data"))
+        os.environ.setdefault("STORAGE_DISK_DIRECTORY", str(data_dir))
+        data_dir.mkdir(exist_ok=True)
+        logger.info(f"Disk storage directory: {data_dir}")
+    
+    logger.info(f"Project root: {PROJECT_ROOT}")
 
 def main():
     """Main entry point for the application"""
@@ -47,7 +68,7 @@ def main():
     except KeyboardInterrupt:
         print("\nServer stopped by user")
     except Exception as e:
-        print(f"Error starting server: {e}")
+        logger.error(f"Error starting server: {e}", exc_info=True)
         sys.exit(1)
 
 if __name__ == "__main__":
