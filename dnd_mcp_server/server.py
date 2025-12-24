@@ -131,12 +131,60 @@ def generator_monster_tool(
     return m.model_dump_json(indent=2)
 
 @mcp.tool()
-def generator_item_tool(rarity: str, concept: str) -> str:
+def generator_item_tool(
+    name: str,
+    type: str,  # Weapon, Armor, Wondrous Item, Potion, Scroll, Ring, etc.
+    rarity: str,  # Common, Uncommon, Rare, Very Rare, Legendary, Artifact
+    requires_attunement: bool = False,
+    
+    # If weapon:
+    weapon_damage: Optional[str] = None,  # "1d8"
+    weapon_damage_type: Optional[str] = None,  # slashing, piercing, bludgeoning
+    weapon_properties: Optional[List[str]] = None,  # ["finesse", "light", "versatile"]
+    
+    # If armor:
+    armor_ac: Optional[int] = None,
+    armor_type: Optional[str] = None,  # light, medium, heavy, shield
+    
+    # Magical properties:
+    bonus: Optional[int] = None,  # +1, +2, +3 for weapons/armor
+    magical_effect: Optional[str] = None,  # Description of special ability
+    charges: Optional[int] = None,  # If it has limited uses
+    
+    description: Optional[str] = None
+) -> str:
     """
-    Generates a unique magic item with mechanics based on a rarity and concept. 
-    Returns the full JSON model.
+    Creates a magic item with DM-specified properties. The DM must define all mechanical effects including bonuses, damage, charges, and special abilities. Follow rarity guidelines for balance.
+
+    Example: generator_item_tool(
+      name="Serpent's Fang Dagger",
+      type="Weapon",
+      rarity="Uncommon",
+      requires_attunement=False,
+      weapon_damage="1d4",
+      weapon_damage_type="piercing",
+      weapon_properties=["finesse", "light"],
+      bonus=1,
+      magical_effect="On hit, target must make DC 11 CON save or take 1d4 poison damage",
+      description="A curved dagger with a green-tinted blade"
+    )
     """
-    i = generate_magic_item(rarity, concept)
+    from dnd_mcp_server.generators.item import assemble_item
+    i = assemble_item(
+        name=name,
+        type=type,
+        rarity=rarity,
+        requires_attunement=requires_attunement,
+        weapon_damage=weapon_damage,
+        weapon_damage_type=weapon_damage_type,
+        weapon_properties=weapon_properties,
+        armor_ac=armor_ac,
+        armor_type=armor_type,
+        bonus=bonus,
+        magical_effect=magical_effect,
+        charges=charges,
+        description=description
+    )
     return i.model_dump_json(indent=2)
 
 @mcp.tool()

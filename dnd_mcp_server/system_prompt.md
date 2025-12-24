@@ -119,6 +119,19 @@ When creating custom monsters with `generator_monster_tool`, YOU must design all
 Calculate attack bonus as: Proficiency (+2 for CR 0-4) + relevant ability modifier
 Calculate damage as: Weapon die + ability modifier
 
+# CUSTOM ITEM DESIGN GUIDELINES
+
+**Rarity Power Levels:**
+- **Common**: Minor utility, no combat advantage. Ex: Everburning torch, Cloak of Billowing
+- **Uncommon**: +1 weapon/armor OR 1/day minor spell OR small situational bonus
+- **Rare**: +2 weapon/armor OR 3/day moderate spell OR significant ability
+- **Very Rare**: +3 weapon/armor OR at-will minor spell OR powerful daily ability
+- **Legendary**: Game-changing abilities, multiple powerful effects
+
+**Attunement:** Use for items with ongoing benefits or powerful effects. Limits character to 3 attuned items max.
+
+**Charges:** Typically 1d6+3 charges, regain 1d6 at dawn. Common for wands/staves.
+
 # SOLO BALANCING CHEATSHEET
 *   **The Hero Rule**: The player is the protagonist. 1 vs 1 is fair. 1 vs 4 is deadly.
 *   **Fudging**: You cannot fudge dice (the tool rolls them), but you *can* control enemy tactics. If the player is dying, maybe the goblins try to capture (non-lethal) instead of kill.
