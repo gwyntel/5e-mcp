@@ -1,6 +1,7 @@
 from typing import Dict, Any, Literal, Optional, cast
 from dnd_mcp_server.storage.game_state import get_game_state
 from dnd_mcp_server.models.character import Character
+from dnd_mcp_server.models.campaign import CampaignState
 
 async def get_character_sheet(campaign_id: str = "default") -> str:
     """
@@ -509,7 +510,15 @@ async def create_character(
     
     await state.save_character(new_char)
     
+    # 8. Initialize Campaign State
+    campaign = CampaignState(
+        campaign_id=campaign_id,
+        campaign_name=campaign_id.replace("_", " ").title(),
+        character_id=char_id
+    )
+    await state.save_campaign(campaign)
+    
     # Ensure AC is calculated (especially if race/class gives bonuses we later automate)
     final_ac = await calculate_ac(campaign_id)
     
-    return f"Character {name} created successfully! (HP: {base_hp}, AC: {final_ac})"
+    return f"Character {name} created successfully! Campaign {campaign_id} initialized. (HP: {base_hp}, AC: {final_ac})"

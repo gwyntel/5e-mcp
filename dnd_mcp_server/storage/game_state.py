@@ -11,6 +11,7 @@ from dnd_mcp_server.storage.backends import create_storage_backend
 from dnd_mcp_server.models.character import Character
 from dnd_mcp_server.models.world import WorldState
 from dnd_mcp_server.models.combat import CombatState
+from dnd_mcp_server.models.campaign import CampaignState
 
 
 class GameState:
@@ -25,6 +26,7 @@ class GameState:
         self._character: Optional[Character] = None
         self._world: Optional[WorldState] = None
         self._combat: Optional[CombatState] = None
+        self._campaign: Optional[CampaignState] = None
         self._loaded = False
     
     async def _ensure_loaded(self):
@@ -33,6 +35,7 @@ class GameState:
             self._character = await self.storage.get_character(self.user_id, self.campaign_id)
             self._world = await self.storage.get_world(self.user_id, self.campaign_id)
             self._combat = await self.storage.get_combat(self.user_id, self.campaign_id)
+            self._campaign = await self.storage.get_campaign(self.user_id, self.campaign_id)
             self._loaded = True
     
     @property
@@ -53,6 +56,12 @@ class GameState:
         await self._ensure_loaded()
         return self._combat or CombatState()
     
+    @property
+    async def campaign(self) -> Optional[CampaignState]:
+        """Get campaign state."""
+        await self._ensure_loaded()
+        return self._campaign
+    
     async def save_character(self, character: Character) -> None:
         """Save character data."""
         self._character = character
@@ -68,6 +77,11 @@ class GameState:
         self._combat = combat
         await self.storage.save_combat(self.user_id, self.campaign_id, combat)
     
+    async def save_campaign(self, campaign: CampaignState) -> None:
+        """Save campaign state."""
+        self._campaign = campaign
+        await self.storage.save_campaign(self.user_id, self.campaign_id, campaign)
+    
     async def save_all(self) -> None:
         """Save all cached data."""
         if self._character:
@@ -76,6 +90,8 @@ class GameState:
             await self.storage.save_world(self.user_id, self.campaign_id, self._world)
         if self._combat:
             await self.storage.save_combat(self.user_id, self.campaign_id, self._combat)
+        if self._campaign:
+            await self.storage.save_campaign(self.user_id, self.campaign_id, self._campaign)
 
 
 class GameStateManager:

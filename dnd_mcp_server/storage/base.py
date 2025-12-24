@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from dnd_mcp_server.models.character import Character
 from dnd_mcp_server.models.world import WorldState
 from dnd_mcp_server.models.combat import CombatState
+from dnd_mcp_server.models.campaign import CampaignState
 
 
 class StorageInterface(ABC):
@@ -94,9 +95,25 @@ class StorageManager:
         key = self._key(user_id, campaign_id, "combat")
         await self.storage.set(key, combat.model_dump_json())
     
+    async def get_campaign(self, user_id: str, campaign_id: str) -> Optional[CampaignState]:
+        """Get campaign state for user and campaign."""
+        key = self._key(user_id, campaign_id, "campaign")
+        data = await self.storage.get(key)
+        if data:
+            try:
+                return CampaignState(**json.loads(data))
+            except Exception as e:
+                print(f"Error parsing campaign data: {e}")
+        return None
+    
+    async def save_campaign(self, user_id: str, campaign_id: str, campaign: CampaignState) -> None:
+        """Save campaign state for user and campaign."""
+        key = self._key(user_id, campaign_id, "campaign")
+        await self.storage.set(key, campaign.model_dump_json())
+    
     async def delete_campaign_data(self, user_id: str, campaign_id: str) -> None:
         """Delete all data for a specific campaign."""
-        data_types = ["character", "world", "combat"]
+        data_types = ["character", "world", "combat", "campaign"]
         for data_type in data_types:
             key = self._key(user_id, campaign_id, data_type)
             await self.storage.delete(key)
