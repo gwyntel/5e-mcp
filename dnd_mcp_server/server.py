@@ -8,7 +8,7 @@ from dnd_mcp_server.tools.character import (
     use_hit_dice, manage_conditions,
     calculate_ac, calculate_modifier, get_proficiency_bonus, create_character
 )
-from dnd_mcp_server.tools.inventory import get_inventory, add_item, remove_item, equip_item, unequip_item, add_gold, remove_gold
+from dnd_mcp_server.tools.inventory import get_inventory, items_add, remove_item, equip_item, unequip_item, add_gold, remove_gold
 from dnd_mcp_server.tools.combat import start_combat, roll_initiative_for_all, get_initiative_order, next_turn, make_attack, end_combat
 from dnd_mcp_server.generators.monster import generate_monster
 from dnd_mcp_server.generators.item import generate_magic_item
@@ -35,7 +35,7 @@ mcp.tool()(get_proficiency_bonus)
 
 # --- Inventory Tools ---
 mcp.tool()(get_inventory)
-mcp.tool()(add_item)
+mcp.tool()(items_add)
 mcp.tool()(remove_item)
 mcp.tool()(equip_item)
 mcp.tool()(unequip_item)

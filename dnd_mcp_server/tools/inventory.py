@@ -12,28 +12,29 @@ async def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
         return {"error": "No character loaded."}
     return char.inventory.model_dump()
 
-async def add_item(item_id: str, equip_to_slot: Literal["main_hand", "off_hand", "armor", None] = None, campaign_id: str = "default") -> str:
+async def items_add(item_ids: List[str], equip_to_slot: Literal["main_hand", "off_hand", "armor", None] = None, campaign_id: str = "default") -> str:
     """
-    Add item to inventory and optionally equip it to a slot.
-    Example: add_item("longsword", "main_hand") adds and equips longsword.
+    Add multiple items to inventory and optionally equip the first one to a slot.
+    Example: items_add(["longsword", "shield"], "main_hand") adds both and equips longsword.
     """
     state = get_game_state(campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
     
-    char.inventory.items.append(item_id)
-    msg = f"Added {item_id} to inventory."
+    char.inventory.items.extend(item_ids)
+    msg = f"Added {', '.join(item_ids)} to inventory."
     
-    # Auto-equip if slot specified
-    if equip_to_slot:
+    # Auto-equip first item if slot specified
+    if equip_to_slot and item_ids:
+        item_id = item_ids[0]
         if equip_to_slot == "main_hand":
             char.inventory.equipped.main_hand = item_id
         elif equip_to_slot == "off_hand":
             char.inventory.equipped.off_hand = item_id
         elif equip_to_slot == "armor":
             char.inventory.equipped.armor = item_id
-        msg += f" Equipped to {equip_to_slot}."
+        msg += f" Equipped {item_id} to {equip_to_slot}."
     
     # TODO: Add logic to look up item weight and update total weight
     await state.save_all()

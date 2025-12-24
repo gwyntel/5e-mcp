@@ -54,7 +54,7 @@ def suggest_fix(error_type: str, context: str = "") -> str:
         "no_character": "Create a character first using create_character() with name, race, class, background, and stats",
         "no_combat": "Start combat using start_combat(['MonsterName']) with monster names",
         "no_spell_slots": "Take a long rest using rest('long') to restore spell slots",
-        "item_not_found": "Check inventory with get_inventory() or add item using add_item('item_id')",
+        "item_not_found": "Check inventory with get_inventory() or add items using items_add(['item_id'])",
         "invalid_target": "Use get_initiative_order() to see valid target IDs",
         "invalid_spell": "Use get_spell_list('ClassName') to see available spells",
         "stat_out_of_range": "Ability scores must be between 1-20. Use get_character_sheet() to check current values"
@@ -124,7 +124,7 @@ def get_parameter_examples(tool_name: str) -> str:
         "make_attack": 'make_attack("pc_abc123", "goblin_1", "Longsword", True)',
         "cast_spell": 'cast_spell("Fireball", 3, True, True)',
         "update_hp": 'update_hp(8, "damage", "goblin_1")',
-        "add_item": 'add_item("potion", None)',
+        "items_add": 'items_add(["potion"], None)',
         "make_check": 'make_check("skill", "athletics", 15, True)',
         "rest": 'rest("long")',
         "roll_dice": 'roll_dice("1d20+3", True)'

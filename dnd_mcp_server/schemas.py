@@ -176,17 +176,18 @@ MAKE_ATTACK_SCHEMA = {
 }
 
 # Inventory Tool Schemas
-ADD_ITEM_SCHEMA = {
+ITEMS_ADD_SCHEMA = {
     "type": "object",
     "properties": {
-        "item_id": {
-            "type": "string",
-            "description": "Item identifier to add"
+        "item_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of item identifiers to add"
         },
         "equip_to_slot": {
             "type": "string",
             "enum": ["main_hand", "off_hand", "armor", None],
-            "description": "Equipment slot to auto-equip",
+            "description": "Equipment slot to auto-equip the first item to",
             "default": None
         },
         "campaign_id": {
@@ -195,7 +196,7 @@ ADD_ITEM_SCHEMA = {
             "default": "default"
         }
     },
-    "required": ["item_id"]
+    "required": ["item_ids"]
 }
 
 GOLD_SCHEMA = {
@@ -398,7 +399,7 @@ ALL_SCHEMAS = {
     "create_character": CREATE_CHARACTER_SCHEMA,
     "start_combat": START_COMBAT_SCHEMA,
     "make_attack": MAKE_ATTACK_SCHEMA,
-    "add_item": ADD_ITEM_SCHEMA,
+    "items_add": ITEMS_ADD_SCHEMA,
     "remove_gold": GOLD_SCHEMA,
     "add_gold": GOLD_SCHEMA,
     "cast_spell": CAST_SPELL_SCHEMA,
