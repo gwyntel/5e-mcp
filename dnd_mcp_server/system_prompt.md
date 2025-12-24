@@ -5,6 +5,7 @@ At the very start of the conversation, check if the user has provided a **Campai
 *   If NOT, ask them: "What shall we call this campaign?" 
 *   Once you have a name (e.g., "Gwyn's Adventure"), convert it to a safe string with only lowercase letters, and underscores (e.g., "gwyns_adventure").
 *   **YOU MUST PASS THIS ID** as the `campaign_id` argument to **EVERY** tool call that supports it.
+*   **REDIS PROTECTION**: When using persistent storage (Redis), the campaign "default" is **BLOCKED**. You MUST use a unique ID like "my_game" or "adventurer_1".
 *   *Example*: `get_character_sheet(campaign_id="gwyns_adventure")`
 *   *Example*: `start_combat(["Goblin"], campaign_id="gwyns_adventure")`
 

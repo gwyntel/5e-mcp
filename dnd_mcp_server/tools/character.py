@@ -5,9 +5,10 @@ from dnd_mcp_server.models.character import Character
 async def get_character_sheet(campaign_id: str = "default") -> str:
     """
     Get complete character sheet with stats, HP, inventory, spells. Use to check current state.
-    Example: get_character_sheet("campaign1") returns character JSON with all current values.
+    Example: get_character_sheet(campaign_id="campaign1") returns character JSON.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     character = await state.character
     if not character:
         return '{"error": "No character found. detailed character creation needed."}'
@@ -17,9 +18,10 @@ async def get_character_sheet(campaign_id: str = "default") -> str:
 async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
     """
     Apply damage, healing, or temp HP to character or combat target. Handles death saves automatically.
-    Example: update_hp(8, "damage", "goblin_1") deals 8 damage to goblin_1 in combat.
+    Example: update_hp(8, "damage", "goblin_1", campaign_id="campaign1") 
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     
     # Handle combat target if specified
     if target_id:
@@ -103,9 +105,10 @@ async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "d
 async def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
     """
     Permanently update an Ability Score (str, dex, con, int, wis, cha) to a new value.
-    Example: update_stat("str", 16) sets Strength to 16 permanently.
+    Example: update_stat("str", 16, campaign_id="campaign1") sets Strength to 16.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
@@ -124,9 +127,10 @@ async def update_stat(stat: str, value: int, campaign_id: str = "default") -> st
 async def add_experience(xp: int, campaign_id: str = "default") -> str:
     """
     Award Experience Points to character. Automatically detects level ups based on XP thresholds.
-    Example: add_experience(150) adds 150 XP and checks for level up.
+    Example: add_experience(150, campaign_id="campaign1") adds 150 XP.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
@@ -167,9 +171,10 @@ async def add_experience(xp: int, campaign_id: str = "default") -> str:
 async def use_hit_dice(count: int, campaign_id: str = "default") -> str:
     """
     Spend Hit Dice during Short Rest to heal. Rolls dice + Con modifier for each.
-    Example: use_hit_dice(2) spends 2 hit dice and heals the rolled amount.
+    Example: use_hit_dice(2, campaign_id="campaign1") spends 2 hit dice.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "No character."
     
@@ -215,9 +220,10 @@ async def use_hit_dice(count: int, campaign_id: str = "default") -> str:
 async def manage_conditions(action: Literal["apply", "remove", "check"], condition: Optional[str] = None, duration: int = 10, levels: int = 1, campaign_id: str = "default") -> str:
     """
     Apply, remove, or check conditions like Prone, Poisoned, or Exhaustion on character.
-    Example: manage_conditions("apply", "Prone", 5) applies Prone for 5 rounds.
+    Example: manage_conditions("apply", "Prone", 5, campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "No character."
     from ..models.character import Condition
@@ -286,9 +292,10 @@ async def manage_conditions(action: Literal["apply", "remove", "check"], conditi
 async def calculate_modifier(stat_name: str, campaign_id: str = "default") -> int:
     """
     Calculate ability modifier for a stat (e.g., STR 14 gives +2 modifier).
-    Example: calculate_modifier("str") returns the Strength modifier.
+    Example: calculate_modifier("str", campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return 0  # Default modifier if no character
@@ -301,9 +308,10 @@ async def calculate_modifier(stat_name: str, campaign_id: str = "default") -> in
 async def get_proficiency_bonus(campaign_id: str = "default") -> int:
     """
     Get character's proficiency bonus based on level (2 at level 1, +1 every 4 levels).
-    Example: get_proficiency_bonus() returns current proficiency bonus.
+    Example: get_proficiency_bonus(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return 2  # Default proficiency bonus
@@ -313,9 +321,10 @@ async def get_proficiency_bonus(campaign_id: str = "default") -> int:
 async def calculate_ac(campaign_id: str = "default") -> int:
     """
     Calculate character's Armor Class from equipped armor, shield, and Dexterity modifier.
-    Example: calculate_ac() returns current AC value (e.g., 16).
+    Example: calculate_ac(campaign_id="campaign1") returns current AC value.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     
     if not char: return 10
@@ -368,9 +377,10 @@ async def create_character(
     """
     Create new character with name, race, class, background, and ability scores.
     WARNING: This completely resets current character state.
-    Example: create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "int": 16, "wis": 13, "cha": 10})
+    Example: create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "int": 16, "wis": 13, "cha": 10}, campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     from ..models.character import (
         Character, CharacterIdentity, AbilityScores, Health, Defense, 
         Combat, Skills, Inventory, EquippedItems, HitDiceStore, HitDice, Saves, Spellcasting, SpellSlot

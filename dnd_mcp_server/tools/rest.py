@@ -4,9 +4,10 @@ from typing import Literal
 async def rest(type: Literal["short", "long"], campaign_id: str = "default") -> str:
     """
     Perform short (1 hour) or long (8 hours) rest to recover resources.
-    Example: rest("long") performs long rest, restoring HP and spell slots.
+    Example: rest("long", campaign_id="campaign1") 
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "No character."
     

@@ -6,9 +6,10 @@ import random
 async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, dc: int = 10, advantage: bool = False, campaign_id: str = "default") -> str:
     """
     Roll d20 + modifiers for skill or ability check vs Difficulty Class.
-    Example: make_check("skill", "athletics", 15) rolls Athletics check DC 15.
+    Example: make_check("skill", "athletics", 15, campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "No character."
 
@@ -67,9 +68,10 @@ async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: 
 async def make_death_save(campaign_id: str = "default") -> str:
     """
     Roll death saving throw when at 0 HP. Tracks successes (3=stable) and failures (3=dead).
-    Example: make_death_save() returns "Death Save Roll: 18. Success."
+    Example: make_death_save(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "No character."
     
@@ -110,9 +112,10 @@ async def make_death_save(campaign_id: str = "default") -> str:
 async def stabilize_character(campaign_id: str = "default") -> str:
     """
     Stabilize dying character (0 HP), resetting death save failures to 0.
-    Example: stabilize_character() returns "Character stabilized. Death saves reset."
+    Example: stabilize_character(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "No character."
     

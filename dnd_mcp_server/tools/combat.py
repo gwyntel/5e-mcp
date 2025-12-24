@@ -10,9 +10,10 @@ from dnd_mcp_server.tools.lookup import get_monster_data
 async def start_combat(entities: List[str], campaign_id: str = "default") -> str:
     """
     Start combat with specified monsters. Initializes combat state and adds combatants.
-    Example: start_combat(["Goblin", "2 Wolves"]) begins combat with 1 goblin and 2 wolves.
+    Example: start_combat(["Goblin", "2 Wolves"], campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     if combat.active:
         return "Combat already active. End current combat first."
@@ -91,9 +92,10 @@ async def start_combat(entities: List[str], campaign_id: str = "default") -> str
 async def roll_initiative_for_all(campaign_id: str = "default") -> str:
     """
     Roll initiative for all combatants and sort turn order. Call after starting combat.
-    Example: roll_initiative_for_all() returns "Initiative Rolled:\nAria: 18\nGoblin: 12"
+    Example: roll_initiative_for_all(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     if not combat.active:
         return "No active combat."
@@ -123,9 +125,10 @@ async def roll_initiative_for_all(campaign_id: str = "default") -> str:
 async def get_initiative_order(campaign_id: str = "default") -> str:
     """
     Get current turn order with HP status and whose turn it is. Use each round.
-    Example: get_initiative_order() shows "-> Aria (pc_abc123) - Init: 18, HP: 15/15"
+    Example: get_initiative_order(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     if not combat.active:
         return "No active combat."
@@ -140,9 +143,10 @@ async def get_initiative_order(campaign_id: str = "default") -> str:
 async def next_turn(campaign_id: str = "default") -> str:
     """
     Advance to next combatant's turn. Automatically increments rounds when order loops.
-    Example: next_turn() returns "It is Goblin's turn." or "Round 2 begins!"
+    Example: next_turn(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     if not combat.active:
         return "No active combat."
@@ -186,9 +190,10 @@ async def next_turn(campaign_id: str = "default") -> str:
 async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool = False, campaign_id: str = "default") -> str:
     """
     Resolve attack roll vs target AC. Returns hit/miss and damage but doesn't apply HP.
-    Example: make_attack("pc_abc123", "goblin_1", "Longsword") rolls attack vs goblin.
+    Example: make_attack("pc_abc123", "goblin_1", "Longsword", campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     
     # Validation
@@ -281,9 +286,10 @@ async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: 
 async def end_combat(campaign_id: str = "default") -> str:
     """
     End current combat encounter and clear temporary combat state.
-    Example: end_combat() returns "Combat ended." and resets combat flags.
+    Example: end_combat(campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     combat.active = False
     await state.save_all()

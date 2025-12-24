@@ -5,9 +5,10 @@ from .character import calculate_ac
 async def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
     """
     Get character's complete inventory including items, equipment, and gold.
-    Example: get_inventory() returns {"items": ["sword", "potion"], "gold": 50, "equipped": {...}}
+    Example: get_inventory(campaign_id="campaign1") returns inventory JSON.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return {"error": "No character loaded."}
@@ -16,9 +17,10 @@ async def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
 async def items_add(item_ids: List[str], equip_to_slot: Literal["main_hand", "off_hand", "armor", None] = None, campaign_id: str = "default") -> str:
     """
     Add multiple items to inventory and optionally equip the first one to a slot.
-    Example: items_add(["longsword", "shield"], "main_hand") adds both and equips longsword.
+    Example: items_add(["longsword", "shield"], "main_hand", campaign_id="campaign1") 
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
@@ -48,9 +50,10 @@ async def items_add(item_ids: List[str], equip_to_slot: Literal["main_hand", "of
 async def remove_item(item_id: str, campaign_id: str = "default") -> str:
     """
     Remove item from inventory and unequip if currently equipped.
-    Example: remove_item("potion") removes potion from inventory.
+    Example: remove_item("potion", campaign_id="campaign1") removes potion.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
@@ -74,9 +77,10 @@ async def remove_item(item_id: str, campaign_id: str = "default") -> str:
 async def equip_item(item_id: str, slot: Literal["main_hand", "off_hand", "armor"], campaign_id: str = "default") -> str:
     """
     Equip inventory item to specific equipment slot.
-    Example: equip_item("shield", "off_hand") equips shield to off hand.
+    Example: equip_item("shield", "off_hand", campaign_id="campaign1") equips shield.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
@@ -99,9 +103,10 @@ async def equip_item(item_id: str, slot: Literal["main_hand", "off_hand", "armor
 async def unequip_item(slot: Literal["main_hand", "off_hand", "armor"], campaign_id: str = "default") -> str:
     """
     Unequip item from specified equipment slot.
-    Example: unequip_item("main_hand") unequips main hand weapon.
+    Example: unequip_item("main_hand", campaign_id="campaign1") unequips weapon.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char:
         return "Error: No character."
@@ -120,9 +125,10 @@ async def unequip_item(slot: Literal["main_hand", "off_hand", "armor"], campaign
 async def add_gold(amount: int, campaign_id: str = "default") -> str:
     """
     Add gold pieces to character's inventory.
-    Example: add_gold(100) adds 100 gold to character's total.
+    Example: add_gold(100, campaign_id="campaign1") adds 100 gold.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "Error: No character."
     
@@ -133,9 +139,10 @@ async def add_gold(amount: int, campaign_id: str = "default") -> str:
 async def remove_gold(amount: int, campaign_id: str = "default") -> str:
     """
     Remove gold from character's inventory if sufficient funds available.
-    Example: remove_gold(25) spends 25 gold if character has enough.
+    Example: remove_gold(25, campaign_id="campaign1") spends 25 gold.
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char: return "Error: No character."
     

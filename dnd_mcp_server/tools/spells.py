@@ -5,9 +5,10 @@ from dnd_mcp_server.models.character import Condition
 async def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
     """
     Get available spell slots by level with current/max usage.
-    Example: get_spell_slots() returns {"1": {"current": 2, "max": 4}, "2": {...}}
+    Example: get_spell_slots(campaign_id="campaign1") 
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char or not char.spellcasting:
         return {"error": "No spellcasting ability."}
@@ -16,9 +17,10 @@ async def get_spell_slots(campaign_id: str = "default") -> Dict[str, Any]:
 async def use_spell_slot(level: int, campaign_id: str = "default") -> str:
     """
     Consume one spell slot of specified level for casting.
-    Example: use_spell_slot(2) consumes one level 2 spell slot.
+    Example: use_spell_slot(2, campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char or not char.spellcasting:
         return "Error: No spellcasting ability."
@@ -38,9 +40,10 @@ async def use_spell_slot(level: int, campaign_id: str = "default") -> str:
 async def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
     """
     Add spell to prepared spells list for classes that require preparation.
-    Example: prepare_spell("Fireball") adds Fireball to prepared spells.
+    Example: prepare_spell("Fireball", campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char or not char.spellcasting:
         return "Error: No spellcasting ability."
@@ -54,9 +57,10 @@ async def prepare_spell(spell_name: str, campaign_id: str = "default") -> str:
 async def cast_spell(spell_name: str, level: int, concentration: bool = False, prepare: bool = False, campaign_id: str = "default") -> str:
     """
     Cast spell consuming slot, handling concentration and optional preparation.
-    Example: cast_spell("Fireball", 3, True) casts Fireball with concentration.
+    Example: cast_spell("Fireball", 3, True, campaign_id="campaign1")
+    REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
-    state = get_game_state(campaign_id)
+    state = get_game_state(campaign_id=campaign_id)
     char = await state.character
     if not char or not char.spellcasting:
         return "Error: No spellcasting ability."
