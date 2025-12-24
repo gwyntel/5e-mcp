@@ -200,9 +200,9 @@ def generator_location_tool(type: str, difficulty: str) -> str:
 
 
 # --- Session Tools ---
-from dnd_mcp_server.tools.session import load_session_history, save_session_summary
-mcp.tool()(load_session_history)
-mcp.tool()(save_session_summary)
+from dnd_mcp_server.tools.session import get_campaign_state, update_campaign_state
+mcp.tool()(get_campaign_state)
+mcp.tool()(update_campaign_state)
 
 # --- Prompts ---
 @mcp.prompt()
