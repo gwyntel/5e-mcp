@@ -3,6 +3,7 @@ Storage backend implementations using py-key-value-aio.
 """
 
 import os
+import asyncio
 from typing import Optional
 
 from dnd_mcp_server.storage.base import StorageInterface
@@ -115,6 +116,26 @@ class RedisStorage(StorageInterface):
         self.password = password
         self.db = db
         self._client = None
+        self._ready = False
+        self._lock = asyncio.Lock()
+    
+    async def _ensure_ready(self):
+        """Ensure client is initialized and setup() has been called."""
+        if self._ready:
+            return
+            
+        async with self._lock:
+            if self._ready:
+                return
+                
+            client = self._get_client()
+            try:
+                # setup() is necessary for RedisStore to initialize connections/pools
+                await client.setup()
+                self._ready = True
+            except Exception as e:
+                print(f"Error during Redis setup: {e}")
+                raise
     
     def _get_client(self):
         """Get Redis client (lazy initialization)."""
@@ -137,6 +158,7 @@ class RedisStorage(StorageInterface):
     async def get(self, key: str) -> Optional[str]:
         """Get a value by key."""
         try:
+            await self._ensure_ready()
             client = self._get_client()
             result = await client.get(key)
             # Handle different return types from py-key-value-aio
@@ -157,6 +179,7 @@ class RedisStorage(StorageInterface):
     async def set(self, key: str, value: str, ttl: Optional[int] = None) -> None:
         """Set a value by key with optional TTL."""
         try:
+            await self._ensure_ready()
             client = self._get_client()
             # py-key-value-aio expects dict-like for put method
             await client.put(key, {"value": value}, ttl=ttl)
@@ -166,6 +189,7 @@ class RedisStorage(StorageInterface):
     async def delete(self, key: str) -> None:
         """Delete a value by key."""
         try:
+            await self._ensure_ready()
             client = self._get_client()
             await client.delete(key)
         except Exception as e:
@@ -174,6 +198,7 @@ class RedisStorage(StorageInterface):
     async def exists(self, key: str) -> bool:
         """Check if a key exists."""
         try:
+            await self._ensure_ready()
             client = self._get_client()
             result = await client.get(key)
             return result is not None

@@ -6,7 +6,7 @@ from typing import Optional
 import asyncio
 
 from dnd_mcp_server.storage.base import StorageManager
-from dnd_mcp_server.storage.config import get_storage_config
+from dnd_mcp_server.storage.config import get_storage_config, StorageBackend
 from dnd_mcp_server.storage.backends import create_storage_backend
 from dnd_mcp_server.models.character import Character
 from dnd_mcp_server.models.world import WorldState
@@ -96,6 +96,13 @@ class GameStateManager:
     
     def get_game_state(self, user_id: str = "default", campaign_id: str = "default") -> GameState:
         """Get game state for user and campaign."""
+        # Block default campaign for Redis storage
+        if self.config.backend == StorageBackend.REDIS and campaign_id == "default":
+            raise ValueError(
+                "The 'default' campaign is not allowed when using Redis storage. "
+                "Please specify a unique campaign name."
+            )
+            
         cache_key = self._cache_key(user_id, campaign_id)
         if cache_key not in self._cache:
             self._cache[cache_key] = GameState(user_id, campaign_id, self.storage_manager)
