@@ -65,8 +65,11 @@ class StorageConfig(BaseModel):
 
 def get_storage_config() -> StorageConfig:
     """Load storage configuration from environment variables."""
+    # Normalize backend to lowercase for case-insensitive matching
+    backend_str = os.getenv("STORAGE_BACKEND", "memory").lower()
+    
     return StorageConfig(
-        backend=StorageBackend(os.getenv("STORAGE_BACKEND", "memory")),
+        backend=StorageBackend(backend_str),
         disk_directory=os.getenv("STORAGE_DISK_DIRECTORY", "./save_data"),
         redis_host=os.getenv("STORAGE_REDIS_HOST", "localhost"),
         redis_port=int(os.getenv("STORAGE_REDIS_PORT", "6379")),
