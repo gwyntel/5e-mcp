@@ -1,5 +1,5 @@
 from fastmcp import FastMCP
-from typing import Literal, List, Dict, Any
+from typing import Literal, List, Dict, Any, Optional
 
 # Import Tools with absolute imports
 from dnd_mcp_server.tools.dice import roll_dice, roll_initiative
@@ -81,12 +81,53 @@ mcp.tool()(get_spell_list)
 # --- Generator Tools ---
 # Wrappers to ensure simple JSON return
 @mcp.tool()
-def generator_monster_tool(concept: str, target_cr: float) -> str:
+def generator_monster_tool(
+    name: str,
+    type: str,  # Beast, Undead, Monstrosity, etc.
+    size: str,  # Tiny, Small, Medium, Large, Huge, Gargantuan
+    cr: float,
+    hp: int,
+    ac: int,
+    speed: int,
+    str: int,
+    dex: int, 
+    con: int,
+    int: int,
+    wis: int,
+    cha: int,
+    attack_bonus: int,
+    damage_dice: str,  # e.g. "1d8+2"
+    damage_type: str,  # slashing, bludgeoning, piercing, poison, etc.
+    alignment: str = "Unaligned",
+    multiattack: Optional[int] = None,
+    traits: Optional[List[Dict[str, str]]] = None,  # [{"name": "...", "description": "..."}]
+    description: Optional[str] = None
+) -> str:
     """
-    Generates a unique monster stat block based on a concept and Target CR. 
-    Returns the full JSON model. Use this when you need a custom foe not found in the standard list.
+    Generates a monster with DM-specified stats. The DM must provide all mechanical details including HP, AC, ability scores, attack bonus, and damage. Use this when you need a custom creature and have designed its complete stat block. For standard monsters, use lookup_monster instead.
+
+    Example: generator_monster_tool(
+      name="Blighted Jaguar",
+      type="Monstrosity", 
+      size="Medium",
+      cr=1.0,
+      hp=25,
+      ac=13,
+      speed=40,
+      str=14, dex=15, con=12, int=3, wis=12, cha=6,
+      attack_bonus=4,
+      damage_dice="1d6+2",
+      damage_type="slashing",
+      traits=[{"name": "Blight Spores", "description": "When hit by melee attack, attacker makes DC 11 CON save or takes 1d4 poison damage"}]
+    )
     """
-    m = generate_monster(concept, target_cr)
+    from dnd_mcp_server.generators.monster import assemble_monster
+    m = assemble_monster(
+        name=name, type=type, size=size, cr=cr, hp=hp, ac=ac, speed=speed,
+        str_val=str, dex_val=dex, con_val=con, int_val=int, wis_val=wis, cha_val=cha,
+        attack_bonus=attack_bonus, damage_dice=damage_dice, damage_type=damage_type,
+        alignment=alignment, multiattack=multiattack, traits=traits, description=description
+    )
     return m.model_dump_json(indent=2)
 
 @mcp.tool()
