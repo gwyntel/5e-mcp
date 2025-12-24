@@ -53,13 +53,12 @@ def setup_environment():
     
     logger.info(f"Project root: {PROJECT_ROOT}")
 
+# Import the MCP server at module level so FastMCP can find it
+setup_environment()
+from dnd_mcp_server.server import mcp
+
 def main():
     """Main entry point for the application"""
-    setup_environment()
-    
-    # Import and run the MCP server
-    from dnd_mcp_server.server import mcp
-    
     print("Starting Solo D&D 5e MCP Server...")
     print("=" * 50)
     
