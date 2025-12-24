@@ -142,12 +142,22 @@ class RedisStorage(StorageInterface):
         if self._client is None:
             try:
                 from key_value.aio.stores.redis import RedisStore
-                self._client = RedisStore(
-                    host=self.host,
-                    port=self.port,
-                    password=self.password,
-                    db=self.db
-                )
+                import redis.asyncio as redis
+                
+                # Construct URL for consistency and SSL support
+                # Heuristic: upstash usually implies SSL (rediss)
+                protocol = "rediss" if self.password and "upstash" in self.host else "redis"
+                
+                if self.password:
+                    url = f"{protocol}://default:{self.password}@{self.host}:{self.port}/{self.db}"
+                else:
+                    url = f"{protocol}://{self.host}:{self.port}/{self.db}"
+
+                # Create explicit client with decode_responses=True (CRITICAL)
+                raw_client = redis.from_url(url, decode_responses=True)
+                
+                self._client = RedisStore(client=raw_client)
+                
             except ImportError:
                 raise ImportError(
                     "Redis support requires 'py-key-value-aio[redis]'. "
