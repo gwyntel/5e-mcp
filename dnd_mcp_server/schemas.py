@@ -99,7 +99,7 @@ CREATE_CHARACTER_SCHEMA = {
                 "str": {"type": "integer", "minimum": 1, "maximum": 20},
                 "dex": {"type": "integer", "minimum": 1, "maximum": 20},
                 "con": {"type": "integer", "minimum": 1, "maximum": 20},
-                "intelligence": {"type": "integer", "minimum": 1, "maximum": 20},
+                "intelligence": {"type": "integer", "minimum": 1, "maximum": 20, "description": "Intelligence attribute (using 'intelligence' because 'int' is a reserved keyword in Python)"},
                 "wis": {"type": "integer", "minimum": 1, "maximum": 20},
                 "cha": {"type": "integer", "minimum": 1, "maximum": 20}
             },
@@ -380,7 +380,7 @@ def validate_params(params: Dict[str, Any], schema: Dict[str, Any]) -> List[str]
 
 # Common validation patterns for small LLMs
 COMMON_VALIDATION_TIPS = {
-    "character_creation": "Always include all 6 ability scores (str, dex, con, int, wis, cha)",
+    "character_creation": "Always include all 6 ability scores (str, dex, con, intelligence, wis, cha)",
     "combat": "Use get_initiative_order() to get correct target IDs before attacking",
     "spells": "Check spell slots with get_spell_slots() before casting",
     "inventory": "Use get_inventory() to verify item exists before equipping",

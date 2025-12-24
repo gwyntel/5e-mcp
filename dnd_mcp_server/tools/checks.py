@@ -6,6 +6,7 @@ import random
 async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: str, dc: int = 10, advantage: bool = False, campaign_id: str = "default") -> str:
     """
     Roll d20 + modifiers for skill or ability check vs Difficulty Class.
+    Ability scores should use 'intelligence' instead of 'int'.
     Example: make_check("skill", "athletics", 15, campaign_id="campaign1")
     REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """

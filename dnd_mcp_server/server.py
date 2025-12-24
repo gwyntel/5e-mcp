@@ -104,7 +104,9 @@ def generator_monster_tool(
     description: Optional[str] = None
 ) -> str:
     """
-    Generates a monster with DM-specified stats. The DM must provide all mechanical details including HP, AC, ability scores, attack bonus, and damage. Use this when you need a custom creature and have designed its complete stat block. For standard monsters, use lookup_monster instead.
+    Generates a monster with DM-specified stats. The DM must provide all mechanical details including HP, AC, ability scores (str, dex, con, intelligence, wis, cha), attack bonus, and damage. 
+    Note: 'intelligence' is used instead of 'int' for the Intelligence score.
+    Use this when you need a custom creature and have designed its complete stat block. For standard monsters, use lookup_monster instead.
 
     Example: generator_monster_tool(
       name="Blighted Jaguar",

@@ -14,7 +14,7 @@ class MonsterStats(BaseModel):
     str: int
     dex: int
     con: int
-    intelligence: int = Field(alias="int")
+    intelligence: int = Field(alias="int", description="Intelligence attribute (using 'intelligence' because 'int' is a reserved keyword in Python)")
     wis: int
     cha: int
 

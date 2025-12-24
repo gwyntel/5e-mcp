@@ -104,7 +104,7 @@ async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "d
 
 async def update_stat(stat: str, value: int, campaign_id: str = "default") -> str:
     """
-    Permanently update an Ability Score (str, dex, con, int, wis, cha) to a new value.
+    Permanently update an Ability Score (str, dex, con, intelligence, wis, cha) to a new value.
     Example: update_stat("str", 16, campaign_id="campaign1") sets Strength to 16.
     REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
@@ -377,7 +377,7 @@ async def create_character(
     """
     Create new character with name, race, class, background, and ability scores.
     WARNING: This completely resets current character state.
-    Example: create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "int": 16, "wis": 13, "cha": 10}, campaign_id="campaign1")
+    Example: create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "intelligence": 16, "wis": 13, "cha": 10}, campaign_id="campaign1")
     REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
     state = get_game_state(campaign_id=campaign_id)
