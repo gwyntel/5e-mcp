@@ -19,15 +19,40 @@ def get_monster_data(name: str) -> Optional[Dict[str, Any]]:
     Internal helper to fetch raw monster dictionary data. 
     Not intended for direct AI use; use lookup_monster instead.
     """
-    params = {"search": name, "limit": 10}
+    # 1. Try exact match first
+    data = _fetch("/v1/monsters/", {"name__iexact": name, "limit": 1})
+    if data.get("results"):
+        return data["results"][0]
+
+    # 2. Try singularized exact match if name ends in 's'
+    if name.lower().endswith('s') and len(name) > 3:
+        singular = name[:-1]
+        data = _fetch("/v1/monsters/", {"name__iexact": singular, "limit": 1})
+        if data.get("results"):
+            return data["results"][0]
+
+    # 3. Fallback to search
+    params = {"search": name, "limit": 20}
     data = _fetch("/v1/monsters/", params)
     results = data.get("results", [])
     
     if not results: return None
     
-    # Prioritize exact match
-    exact = next((m for m in results if m['name'].lower() == name.lower()), None)
-    return exact if exact else results[0]
+    # 4. Prioritize exact-ish matches in results
+    name_low = name.lower()
+    # Exact name match in results
+    exact = next((m for m in results if m['name'].lower() == name_low), None)
+    if exact: return exact
+    
+    # Singularized name match in results
+    if name_low.endswith('s'):
+        singular = name_low[:-1]
+        match = next((m for m in results if m['name'].lower() == singular), None)
+        if match: return match
+        
+    # Substring match (either way)
+    sub = next((m for m in results if name_low in m['name'].lower() or m['name'].lower() in name_low), None)
+    return sub if sub else results[0]
 
 def lookup_monster(name: str, cr_range: Optional[str] = None) -> str:
     """

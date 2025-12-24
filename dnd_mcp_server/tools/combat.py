@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 import random
+import re
 from dnd_mcp_server.storage.game_state import get_game_state
 from dnd_mcp_server.models.combat import Combatant, CombatState
 from dnd_mcp_server.tools.dice import roll_initiative, roll_dice
@@ -41,34 +42,48 @@ async def start_combat(entities: List[str], campaign_id: str = "default") -> str
         if char and entity_ref == char.id: 
             continue
             
-        # Unique ID handling
-        mob_id = entity_ref
-        while mob_id in existing_ids:
-             mob_id += "_1"
-        existing_ids.add(mob_id)
+        # Parse count (e.g., "2 Wolves")
+        count = 1
+        monster_name = entity_ref.strip()
+        match = re.match(r'^(\d+)\s+(.*)$', monster_name)
+        if match:
+            try:
+                count = int(match.group(1))
+                monster_name = match.group(2)
+            except:
+                pass # Fallback to 1 if parsing fails
 
-        # Lookup data
-        data = get_monster_data(entity_ref) # Try using name
-        
-        if data:
-            # Parse HP/AC
-            hp = data.get("hit_points", 10)
-            ac = data.get("armor_class", 10)
-            name = data.get("name", entity_ref)
-            # We could store attacks here if Combatant supported it
-        else:
-            # Fallback
-            hp, ac, name = 10, 12, entity_ref
+        for _ in range(count):
+            # Generate Unique ID
+            base_id = monster_name.lower().replace(" ", "_")
+            mob_id = base_id
+            suffix = 1
+            # Ensure unique ID within current combatants list
+            while any(c.id == mob_id for c in combat.combatants):
+                mob_id = f"{base_id}_{suffix}"
+                suffix += 1
+
+            # Lookup data
+            data = get_monster_data(monster_name) # Try using name
             
-        mob = Combatant(
-            id=mob_id,
-            name=name,
-            type="monster",
-            hp=hp,
-            max_hp=hp,
-            ac=ac
-        )
-        combat.combatants.append(mob)
+            if data:
+                # Parse HP/AC
+                hp = data.get("hit_points", 10)
+                ac = data.get("armor_class", 10)
+                name = data.get("name", monster_name)
+            else:
+                # Fallback
+                hp, ac, name = 10, 12, monster_name
+                
+            mob = Combatant(
+                id=mob_id,
+                name=name,
+                type="monster",
+                hp=hp,
+                max_hp=hp,
+                ac=ac
+            )
+            combat.combatants.append(mob)
 
     await state.save_all()
     return f"Combat started with {len(combat.combatants)} combatants. Round 1."
@@ -218,7 +233,6 @@ async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: 
                 # But 'damage_dice' might occur in some records. 
                 # fallback parse description:
                 desc = action.get("desc", "")
-                import re
                 # Pattern: (1d6 + 4) or 1d6
                 dmg_match = re.search(r'\(?(\d+d\d+(?:\s?[\+\-]\s?\d+)?)\)?', desc)
                 if dmg_match:
