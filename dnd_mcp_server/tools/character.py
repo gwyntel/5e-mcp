@@ -395,7 +395,10 @@ async def create_character(
     # 2. Stats
     # Validate keys
     for s in ['str', 'dex', 'con', 'intelligence', 'wis', 'cha']:
-        if s not in stats: return f"Missing stat: {s}"
+        if s not in stats:
+            if s == "intelligence":
+                return "Missing stat: intelligence. Please use the full word 'intelligence' instead of the 'int' abbreviation to avoid Python reserved keyword issues, but keep other stats abbreviated (str, dex, con, wis, cha)."
+            return f"Missing stat: {s}"
         
     ability_scores = AbilityScores(**stats)
     

@@ -334,7 +334,10 @@ def validate_params(params: Dict[str, Any], schema: Dict[str, Any]) -> List[str]
     
     for required_field in schema.get("required", []):
         if required_field not in params:
-            errors.append(f"Missing required parameter: {required_field}")
+            if required_field == "intelligence":
+                errors.append("Missing required parameter: intelligence. IMPORTANT: Use the full word 'intelligence' (str, dex, con, intelligence, wis, cha). Do NOT use 'int' as it is a reserved Python keyword.")
+            else:
+                errors.append(f"Missing required parameter: {required_field}")
     
     for field_name, field_schema in schema.get("properties", {}).items():
         if field_name in params:
