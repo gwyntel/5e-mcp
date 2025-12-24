@@ -53,7 +53,7 @@ UPDATE_STAT_SCHEMA = {
     "properties": {
         "stat": {
             "type": "string",
-            "enum": ["str", "dex", "con", "int", "wis", "cha"],
+            "enum": ["str", "dex", "con", "intelligence", "wis", "cha"],
             "description": "Ability score to update"
         },
         "value": {
@@ -99,11 +99,11 @@ CREATE_CHARACTER_SCHEMA = {
                 "str": {"type": "integer", "minimum": 1, "maximum": 20},
                 "dex": {"type": "integer", "minimum": 1, "maximum": 20},
                 "con": {"type": "integer", "minimum": 1, "maximum": 20},
-                "int": {"type": "integer", "minimum": 1, "maximum": 20},
+                "intelligence": {"type": "integer", "minimum": 1, "maximum": 20},
                 "wis": {"type": "integer", "minimum": 1, "maximum": 20},
                 "cha": {"type": "integer", "minimum": 1, "maximum": 20}
             },
-            "required": ["str", "dex", "con", "int", "wis", "cha"]
+            "required": ["str", "dex", "con", "intelligence", "wis", "cha"]
         },
         "level": {
             "type": "integer",

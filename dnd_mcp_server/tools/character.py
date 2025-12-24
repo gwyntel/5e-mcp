@@ -11,7 +11,8 @@ async def get_character_sheet(campaign_id: str = "default") -> str:
     character = await state.character
     if not character:
         return '{"error": "No character found. detailed character creation needed."}'
-    return cast(str, character.model_dump_json(indent=2))
+    # Clean output by dumping model to dict first
+    return character.model_dump_json(indent=2)
 
 async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
     """
@@ -109,9 +110,9 @@ async def update_stat(stat: str, value: int, campaign_id: str = "default") -> st
     if not char:
         return "Error: No character."
 
-    # Map 'int' to 'intelligence' due to Pydantic alias
+    # Map 'int' to 'intelligence' for backward compatibility in internal calls if any
     stat_mapping = {"int": "intelligence"}
-    actual_stat = stat_mapping.get(stat, stat)
+    actual_stat = stat_mapping.get(stat.lower(), stat.lower())
 
     if hasattr(char.stats, actual_stat):
         setattr(char.stats, actual_stat, value)
@@ -291,7 +292,7 @@ async def calculate_modifier(stat_name: str, campaign_id: str = "default") -> in
     char = await state.character
     if not char:
         return 0  # Default modifier if no character
-    # Map 'int' to 'intelligence' due to Pydantic alias
+    # Use standardized 'intelligence'
     stat_mapping = {"int": "intelligence"}
     actual_stat = stat_mapping.get(stat_name.lower(), stat_name.lower())
     score = getattr(char.stats, actual_stat, 10)
@@ -383,7 +384,7 @@ async def create_character(
     
     # 2. Stats
     # Validate keys
-    for s in ['str', 'dex', 'con', 'int', 'wis', 'cha']:
+    for s in ['str', 'dex', 'con', 'intelligence', 'wis', 'cha']:
         if s not in stats: return f"Missing stat: {s}"
         
     ability_scores = AbilityScores(**stats)
@@ -445,11 +446,11 @@ async def create_character(
              slots = {"1": SpellSlot(max=1, current=1)}
              
         ability_map = {
-            "wizard": "int", "cleric": "wis", "druid": "wis", 
+            "wizard": "intelligence", "cleric": "wis", "druid": "wis", 
             "sorcerer": "cha", "bard": "cha", "warlock": "cha"
         }
         
-        ability_value = ability_map.get(cls_lower, "int")
+        ability_value = ability_map.get(cls_lower, "intelligence")
         spells = Spellcasting(
             ability=cast(Literal["str", "dex", "con", "int", "wis", "cha"], ability_value),
             slots=slots,
@@ -478,8 +479,8 @@ async def create_character(
         skills.stealth = 2 + ((stats['dex']-10)//2)
         
     if cls_lower == "wizard":
-        skills.arcana = 2 + ((stats['int']-10)//2)
-        skills.history = 2 + ((stats['int']-10)//2)
+        skills.arcana = 2 + ((stats['intelligence']-10)//2)
+        skills.history = 2 + ((stats['intelligence']-10)//2)
         
     new_char = Character(
         id=char_id,
@@ -495,4 +496,7 @@ async def create_character(
     
     await state.save_character(new_char)
     
-    return f"Character {name} created successfully! (HP: {base_hp}, AC: {ac})"
+    # Ensure AC is calculated (especially if race/class gives bonuses we later automate)
+    final_ac = await calculate_ac(campaign_id)
+    
+    return f"Character {name} created successfully! (HP: {base_hp}, AC: {final_ac})"

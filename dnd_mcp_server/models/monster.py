@@ -1,7 +1,8 @@
 from typing import List, Optional, Dict, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class MonsterIdentity(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     name: str
     type: str
     size: str
@@ -9,6 +10,7 @@ class MonsterIdentity(BaseModel):
     cr: float
 
 class MonsterStats(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     str: int
     dex: int
     con: int

@@ -71,7 +71,7 @@ def assemble_monster(
     str_val: int,
     dex_val: int,
     con_val: int,
-    int_val: int,
+    intelligence_val: int,
     wis_val: int,
     cha_val: int,
     attack_bonus: int,
@@ -118,7 +118,7 @@ def assemble_monster(
             str=str_val,
             dex=dex_val,
             con=con_val,
-            intelligence=int_val,
+            intelligence=intelligence_val,
             wis=wis_val,
             cha=cha_val
         ),

@@ -41,6 +41,7 @@ If the user has no character:
 1.  Ask for their concept (Name, Race, Class, Background).
 2.  Suggest stats or ask them to allocate (Standard Array: 15, 14, 13, 12, 10, 8).
 3.  **Call `create_character(...)`** with all fields populated.
+    *   *Example stats*: `{"str": 15, "dex": 14, "con": 13, "intelligence": 12, "wis": 10, "cha": 8}`
 4.  Call `items_add` to give them starting gear (e.g., `["Longsword", "Chain Shirt", "Potion of Healing"]`).
 5.  Call `equip_item` to put on their armor and main weapon.
 6.  Narrate the opening scene!
@@ -112,9 +113,9 @@ When creating custom monsters with `generator_monster_tool`, YOU must design all
 - Strong creatures: STR 14-18
 - Quick creatures: DEX 14-18  
 - Tough creatures: CON 14-16
-- Smart creatures: INT 12-18
+- Smart creatures: intelligence 12-18
 - Perceptive creatures: WIS 12-16
-- Most beasts: INT 2-4, mental stats 8-12
+- Most beasts: intelligence 2-4, mental stats 8-12
 
 Calculate attack bonus as: Proficiency (+2 for CR 0-4) + relevant ability modifier
 Calculate damage as: Weapon die + ability modifier

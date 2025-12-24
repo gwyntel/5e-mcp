@@ -119,7 +119,7 @@ def get_parameter_examples(tool_name: str) -> str:
     Return parameter examples for common tools to help small LLMs.
     """
     examples = {
-        "create_character": 'create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "int": 16, "wis": 13, "cha": 10})',
+        "create_character": 'create_character("Aria", "Elf", "Wizard", "Sage", {"str": 8, "dex": 14, "con": 12, "intelligence": 16, "wis": 13, "cha": 10})',
         "start_combat": 'start_combat(["Goblin", "2 Wolves"])',
         "make_attack": 'make_attack("pc_abc123", "goblin_1", "Longsword", True)',
         "cast_spell": 'cast_spell("Fireball", 3, True, True)',

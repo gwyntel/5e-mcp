@@ -92,7 +92,7 @@ def generator_monster_tool(
     str: int,
     dex: int, 
     con: int,
-    int: int,
+    intelligence: int,
     wis: int,
     cha: int,
     attack_bonus: int,
@@ -114,7 +114,7 @@ def generator_monster_tool(
       hp=25,
       ac=13,
       speed=40,
-      str=14, dex=15, con=12, int=3, wis=12, cha=6,
+      str=14, dex=15, con=12, intelligence=3, wis=12, cha=6,
       attack_bonus=4,
       damage_dice="1d6+2",
       damage_type="slashing",
@@ -124,7 +124,7 @@ def generator_monster_tool(
     from dnd_mcp_server.generators.monster import assemble_monster
     m = assemble_monster(
         name=name, type=type, size=size, cr=cr, hp=hp, ac=ac, speed=speed,
-        str_val=str, dex_val=dex, con_val=con, int_val=int, wis_val=wis, cha_val=cha,
+        str_val=str, dex_val=dex, con_val=con, intelligence_val=intelligence, wis_val=wis, cha_val=cha,
         attack_bonus=attack_bonus, damage_dice=damage_dice, damage_type=damage_type,
         alignment=alignment, multiattack=multiattack, traits=traits, description=description
     )

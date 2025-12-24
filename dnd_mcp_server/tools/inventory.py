@@ -1,5 +1,6 @@
 from typing import Dict, Any, List, Literal
 from dnd_mcp_server.storage.game_state import get_game_state
+from .character import calculate_ac
 
 async def get_inventory(campaign_id: str = "default") -> Dict[str, Any]:
     """
@@ -37,6 +38,10 @@ async def items_add(item_ids: List[str], equip_to_slot: Literal["main_hand", "of
         msg += f" Equipped {item_id} to {equip_to_slot}."
     
     # TODO: Add logic to look up item weight and update total weight
+    # Recalculate AC in case armor was equipped
+    if equip_to_slot == "armor" or (equip_to_slot == "off_hand" and item_ids and "shield" in item_ids[0].lower()):
+        await calculate_ac(campaign_id)
+        
     await state.save_all()
     return msg
 
@@ -60,6 +65,7 @@ async def remove_item(item_id: str, campaign_id: str = "default") -> str:
         if char.inventory.equipped.armor == item_id:
             char.inventory.equipped.armor = None
             
+        await calculate_ac(campaign_id)
         await state.save_all()
         return f"Removed {item_id} from inventory."
     else:
@@ -86,6 +92,7 @@ async def equip_item(item_id: str, slot: Literal["main_hand", "off_hand", "armor
     elif slot == "armor":
         char.inventory.equipped.armor = item_id
     
+    await calculate_ac(campaign_id)
     await state.save_all()
     return f"Equipped {item_id} to {slot}."
 
@@ -106,6 +113,7 @@ async def unequip_item(slot: Literal["main_hand", "off_hand", "armor"], campaign
     elif slot == "armor":
         char.inventory.equipped.armor = None
         
+    await calculate_ac(campaign_id)
     await state.save_all()
     return f"Unequipped {slot}."
 
