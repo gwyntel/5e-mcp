@@ -32,8 +32,6 @@ def ensure_campaign_dir(campaign_id: str):
 
 # --- Character Persistence ---
 
-# --- Character Persistence ---
-
 def load_character(campaign_id: str) -> Optional[Character]:
     paths = get_file_paths(campaign_id)
     if not os.path.exists(paths["char"]):
