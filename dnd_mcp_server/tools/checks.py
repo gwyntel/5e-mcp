@@ -14,8 +14,7 @@ async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: 
     char = await state.character
     if not char: return "No character."
 
-    # Map 'int' to 'intelligence' due to Pydantic alias
-    stat_mapping = {"int": "intelligence"}
+    # Intelligence attribute is 'intelligence'
 
     if check_type == "skill":
         # 1. Get Modifier for skill
@@ -23,7 +22,7 @@ async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: 
         skill_ability_map = {
             "athletics": "str",
             "acrobatics": "dex", "sleight_of_hand": "dex", "stealth": "dex",
-            "arcana": "int", "history": "int", "investigation": "int", "nature": "int", "religion": "int",
+            "arcana": "intelligence", "history": "intelligence", "investigation": "intelligence", "nature": "intelligence", "religion": "intelligence",
             "animal_handling": "wis", "insight": "wis", "medicine": "wis", "perception": "wis", "survival": "wis",
             "deception": "cha", "intimidation": "cha", "performance": "cha", "persuasion": "cha"
         }
@@ -32,8 +31,7 @@ async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: 
         if not ability:
             return f"Unknown skill '{skill_or_ability}'. Use check_type='ability' for raw stats."
 
-        actual_ability = stat_mapping.get(ability, ability)
-        base_mod = getattr(char.stats, actual_ability, 10)
+        base_mod = getattr(char.stats, ability, 10)
         mod = (base_mod - 10) // 2
 
         # Add proficiency if proficient
@@ -55,8 +53,11 @@ async def make_check(check_type: Literal["skill", "ability"], skill_or_ability: 
 
     elif check_type == "ability":
         # Raw ability check
-        actual_stat = stat_mapping.get(skill_or_ability.lower(), skill_or_ability.lower())
-        score = getattr(char.stats, actual_stat, 10)
+        score = getattr(char.stats, skill_or_ability.lower(), 10)
+        # Handle 'int' fallback if user still passes it? User said "get rid of int".
+        if skill_or_ability.lower() == "int":
+            score = getattr(char.stats, "intelligence", 10)
+            
         mod = (score - 10) // 2
 
         expression = f"1d20+{mod}"

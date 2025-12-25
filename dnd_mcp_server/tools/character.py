@@ -114,9 +114,9 @@ async def update_stat(stat: str, value: int, campaign_id: str = "default") -> st
     if not char:
         return "Error: No character."
 
-    # Map 'int' to 'intelligence' for backward compatibility in internal calls if any
-    stat_mapping = {"int": "intelligence"}
-    actual_stat = stat_mapping.get(stat.lower(), stat.lower())
+    actual_stat = stat.lower()
+    if actual_stat == "int":
+        actual_stat = "intelligence"
 
     if hasattr(char.stats, actual_stat):
         setattr(char.stats, actual_stat, value)
@@ -300,9 +300,9 @@ async def calculate_modifier(stat_name: str, campaign_id: str = "default") -> in
     char = await state.character
     if not char:
         return 0  # Default modifier if no character
-    # Use standardized 'intelligence'
-    stat_mapping = {"int": "intelligence"}
-    actual_stat = stat_mapping.get(stat_name.lower(), stat_name.lower())
+    actual_stat = stat_name.lower()
+    if actual_stat == "int":
+        actual_stat = "intelligence"
     score = getattr(char.stats, actual_stat, 10)
     return (score - 10) // 2
 
@@ -466,7 +466,7 @@ async def create_character(
         
         ability_value = ability_map.get(cls_lower, "intelligence")
         spells = Spellcasting(
-            ability=cast(Literal["str", "dex", "con", "int", "wis", "cha"], ability_value),
+            ability=cast(Literal["str", "dex", "con", "intelligence", "wis", "cha"], ability_value),
             slots=slots,
             prepared=[]
         )
