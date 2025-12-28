@@ -27,18 +27,20 @@ async def rest(type: Literal["short", "long"], campaign_id: str = "default") -> 
 
     elif type == "long":
         # 1. HP
-        char.health.current_hp = char.health.max_hp
+        if char.health:
+            char.health.current_hp = char.health.max_hp
         
         # 2. Hit Dice (recover half max)
         recovered_hd = []
-        for hd_type in ["d6", "d8", "d10", "d12"]:
-            hd_store = getattr(char.health.hit_dice, hd_type)
-            if hd_store and hd_store.max > 0:
-                recover_amt = max(1, hd_store.max // 2)
-                old_curr = hd_store.current
-                hd_store.current = min(hd_store.current + recover_amt, hd_store.max)
-                if hd_store.current > old_curr:
-                    recovered_hd.append(f"{hd_store.current - old_curr}{hd_type}")
+        if char.health and char.health.hit_dice:
+            for hd_type in ["d6", "d8", "d10", "d12"]:
+                hd_store = getattr(char.health.hit_dice, hd_type)
+                if hd_store and hd_store.max > 0:
+                    recover_amt = max(1, hd_store.max // 2)
+                    old_curr = hd_store.current
+                    hd_store.current = min(hd_store.current + recover_amt, hd_store.max)
+                    if hd_store.current > old_curr:
+                        recovered_hd.append(f"{hd_store.current - old_curr}{hd_type}")
 
         # 3. Spell Slots
         if char.spellcasting:

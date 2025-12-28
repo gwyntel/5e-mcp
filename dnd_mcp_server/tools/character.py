@@ -19,7 +19,9 @@ async def get_character_sheet(campaign_id: str = "default") -> str:
 async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "damage", target_id: Optional[str] = None, campaign_id: str = "default") -> str:
     """
     Apply damage, healing, or temp HP to character or combat target. Handles death saves automatically.
+    Works both in and out of combat. For environmental targets, use descriptive IDs like "trap", "rockslide", "poison_dart".
     Example: update_hp(8, "damage", "goblin_1", campaign_id="campaign1") 
+    Example: update_hp(5, "damage", "trap", campaign_id="campaign1") for environmental damage
     REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
     state = get_game_state(campaign_id=campaign_id)
@@ -28,10 +30,24 @@ async def update_hp(amount: int, type: Literal["damage", "healing", "temp"] = "d
     if target_id:
         from ..models.combat import Combatant
         combat = await state.combat
-        if not combat.active:
-            return "No active combat."
-            
-        target = next((c for c in combat.combatants if c.id == target_id), None)
+        
+        # Look for target in active combat first
+        target = None
+        if combat and combat.active:
+            target = next((c for c in combat.combatants if c.id == target_id), None)
+        
+        # If not in combat and target_id looks like a combatant ID, create temporary combatant
+        if not target and (target_id.startswith("pc_") or "_" in target_id or target_id in ["trap", "rockslide", "poison_dart", "environment"]):
+            # Create temporary combatant for environmental/narrative targets
+            target = Combatant(
+                id=target_id,
+                name=target_id.replace("_", " ").title(),
+                type="npc",  # Use npc type for environmental targets
+                hp=1,  # Default HP for environmental targets
+                max_hp=1,
+                ac=10  # Default AC for environmental targets
+            )
+        
         if not target:
             return f"Target {target_id} not found."
             
@@ -136,6 +152,10 @@ async def add_experience(xp: int, campaign_id: str = "default") -> str:
     if not char:
         return "Error: No character."
         
+    # Ensure identity exists before accessing
+    if not char.identity:
+        return "Error: Character identity not found."
+        
     char.identity.xp += xp
     
     # 5e Cumulative XP Table
@@ -146,19 +166,20 @@ async def add_experience(xp: int, campaign_id: str = "default") -> str:
         16: 195000, 17: 225000, 18: 265000, 19: 305000, 20: 355000
     }
     
-    current_level = char.identity.level
+    current_level = char.identity.level if char.identity else 1
     new_level = current_level
     
     # Check for level up
     for lvl, threshold in xp_table.items():
-        if lvl > current_level and char.identity.xp >= threshold:
+        if lvl > current_level and char.identity and char.identity.xp >= threshold:
             new_level = lvl
             
-    msg = f"Added {xp} XP. Total: {char.identity.xp}."
+    msg = f"Added {xp} XP. Total: {char.identity.xp if char.identity else 0}."
     
     if new_level > current_level:
         # Update level on sheet
-        char.identity.level = new_level
+        if char.identity:
+            char.identity.level = new_level
         # Increase proficiency bonus? ceil(level/4)+1
         import math
         char.stats.proficiency_bonus = math.ceil(new_level / 4) + 1

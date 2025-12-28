@@ -77,36 +77,42 @@ async def make_death_save(campaign_id: str = "default") -> str:
     char = await state.character
     if not char: return "No character."
     
-    if char.health.current_hp > 0:
+    if char.health and char.health.current_hp > 0:
         return "Character is not unconscious (HP > 0)."
         
     roll = random.randint(1, 20)
     msg = f"Death Save Roll: {roll}. "
     
     if roll == 1:
-        char.health.death_saves.failures += 2
+        if char.health and char.health.death_saves:
+            char.health.death_saves.failures += 2
         msg += "CRITICAL FAILURE! (2 failures added)."
     elif roll == 20:
-        char.health.current_hp = 1
-        char.health.death_saves.failures = 0
-        char.health.death_saves.successes = 0
+        if char.health:
+            char.health.current_hp = 1
+            if char.health.death_saves:
+                char.health.death_saves.failures = 0
+                char.health.death_saves.successes = 0
         msg += "CRITICAL SUCCESS! You regain 1 HP and consciousness!"
         await state.save_all()
         return msg
     elif roll >= 10:
-        char.health.death_saves.successes += 1
+        if char.health and char.health.death_saves:
+            char.health.death_saves.successes += 1
         msg += "Success."
     else:
-        char.health.death_saves.failures += 1
+        if char.health and char.health.death_saves:
+            char.health.death_saves.failures += 1
         msg += "Failure."
         
     # Check status
-    if char.health.death_saves.successes >= 3:
-        char.health.death_saves.successes = 0
-        char.health.death_saves.failures = 0
-        msg += " STABILIZED! (Set failures/successes to 0)"
-    elif char.health.death_saves.failures >= 3:
-        msg += " DEAD! Character has died."
+    if char.health and char.health.death_saves:
+        if char.health.death_saves.successes >= 3:
+            char.health.death_saves.successes = 0
+            char.health.death_saves.failures = 0
+            msg += " STABILIZED! (Set failures/successes to 0)"
+        elif char.health.death_saves.failures >= 3:
+            msg += " DEAD! Character has died."
         
     await state.save_all()
     return msg
@@ -121,7 +127,8 @@ async def stabilize_character(campaign_id: str = "default") -> str:
     char = await state.character
     if not char: return "No character."
     
-    char.health.death_saves.successes = 0
-    char.health.death_saves.failures = 0
+    if char.health and char.health.death_saves:
+        char.health.death_saves.successes = 0
+        char.health.death_saves.failures = 0
     await state.save_all()
     return "Character stabilized. Death saves reset."

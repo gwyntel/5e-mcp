@@ -26,7 +26,7 @@ async def get_campaign_state(campaign_id: str) -> str:
         campaign = CampaignState(
             campaign_id=campaign_id,
             campaign_name=campaign_id.replace("_", " ").title(),
-            character_id=char.id
+            character_id=char.id if char else None
         )
         await state_mgr.save_campaign(campaign)
         
@@ -191,7 +191,7 @@ async def update_campaign_state(campaign_id: str, changes: Dict[str, Any]) -> st
         campaign = CampaignState(
             campaign_id=campaign_id,
             campaign_name=campaign_id.replace("_", " ").title(),
-            character_id=char.id
+            character_id=char.id if char else None
         )
     
     # Apply changes

@@ -23,8 +23,12 @@ async def start_combat(entities: List[str], campaign_id: str = "default") -> str
     combat.combatants = []
     
     # Add Player
-    if await state.character:
-        char = await state.character
+    char = await state.character
+    if char:
+        # Ensure all required attributes exist
+        if not char.identity or not char.health or not char.defense:
+            return "Error: Character missing required attributes (identity, health, or defense)"
+        
         pc = Combatant(
             id=char.id,
             name=char.identity.name,
@@ -40,7 +44,7 @@ async def start_combat(entities: List[str], campaign_id: str = "default") -> str
     for entity_ref in entities:
         # Check if it's the player ID (skip)
         char = await state.character
-        if char and entity_ref == char.id: 
+        if char and char.id and entity_ref == char.id: 
             continue
             
         # Parse count (e.g., "2 Wolves")
@@ -108,7 +112,7 @@ async def roll_initiative_for_all(campaign_id: str = "default") -> str:
         mod = 0
         if c.type == "player":
             char = await state.character
-            if char:
+            if char and char.defense:
                 mod = char.defense.initiative_mod
         
         init = roll_initiative(mod)
@@ -190,18 +194,51 @@ async def next_turn(campaign_id: str = "default") -> str:
 async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: bool = False, campaign_id: str = "default") -> str:
     """
     Resolve attack roll vs target AC. Returns hit/miss and damage but doesn't apply HP.
+    Works both in and out of combat. Supports environmental attacks with descriptive IDs like "trap", "rockslide", "poison_dart".
     Example: make_attack("pc_abc123", "goblin_1", "Longsword", campaign_id="campaign1")
+    Example: make_attack("trap", "pc_abc123", "Poison Dart", campaign_id="campaign1") for environmental hazards
     REQUIRED for persistent storage (e.g. Redis). 'default' is restricted on Redis.
     """
     state = get_game_state(campaign_id=campaign_id)
     combat = await state.combat
     
-    # Validation
-    attacker = next((c for c in combat.combatants if c.id == attacker_id), None)
-    target = next((c for c in combat.combatants if c.id == target_id), None)
+    # Validation - allow attacks outside of active combat
+    attacker = None
+    target = None
     
-    if not attacker: return f"Attacker {attacker_id} not found."
-    if not target: return f"Target {target_id} not found."
+    # Look for combatants in active combat first
+    if combat.active:
+        attacker = next((c for c in combat.combatants if c.id == attacker_id), None)
+        target = next((c for c in combat.combatants if c.id == target_id), None)
+    
+    # If not in active combat, create temporary combatants for narrative/environmental attacks
+    if not attacker:
+        # Check if attacker_id looks like a valid ID or environmental source
+        if attacker_id.startswith("pc_") or attacker_id in ["trap", "rockslide", "poison_dart", "environment", "falling_rocks", "magic_turret"]:
+            attacker = Combatant(
+                id=attacker_id,
+                name=attacker_id.replace("_", " ").title(),
+                type="npc",  # Use npc type for environmental targets
+                hp=1,
+                max_hp=1,
+                ac=10
+            )
+        else:
+            return f"Attacker {attacker_id} not found."
+    
+    if not target:
+        # Check if target_id looks like a valid ID or environmental target
+        if target_id.startswith("pc_") or "_" in target_id or target_id in ["trap", "rockslide", "poison_dart", "environment", "falling_rocks", "magic_turret", "door", "wall"]:
+            target = Combatant(
+                id=target_id,
+                name=target_id.replace("_", " ").title(),
+                type="npc",  # Use npc type for environmental targets
+                hp=1,
+                max_hp=1,
+                ac=10
+            )
+        else:
+            return f"Target {target_id} not found."
     
     # Determine bonuses (Simplified: Need to fetch from Char/Monster models)
     # For prototype: Assume player uses Char model, Monsters use fixed +4
@@ -210,7 +247,8 @@ async def make_attack(attacker_id: str, target_id: str, weapon: str, advantage: 
     
     if attacker.type == "player":
         char = await state.character
-        if char:
+        atk_meta = None
+        if char and char.combat:
             # Find weapon in attacks
             atk_meta = next((a for a in char.combat.attacks if a.name.lower() == weapon.lower()), None)
         if atk_meta:

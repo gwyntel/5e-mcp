@@ -76,7 +76,7 @@ def validate_combat_state(campaign_id: str = "default") -> None:
     if not state.character:
         raise ValidationError("No character found. Use create_character() to create one first.")
     
-    if state.combat.active:
+    if state.combat and state.combat.active:
         combat = state.combat
         if not combat.combatants:
             raise ValidationError("Combat is active but has no combatants. Use end_combat() to reset.")
@@ -97,14 +97,16 @@ def validate_character_state(campaign_id: str = "default") -> None:
         raise ValidationError("No character loaded. Use create_character() to create one.")
     
     char = state.character
+    if not char:
+        raise ValidationError("No character loaded. Use create_character() to create one.")
     
     # Check for common issues
     issues = []
     
-    if char.health.current_hp <= 0:
+    if char.health and char.health.current_hp <= 0:
         issues.append("Character has 0 HP - use make_death_save() or stabilize_character()")
     
-    if char.spellcasting:
+    if char.spellcasting and char.spellcasting.slots:
         # Check if all spell slots are empty
         empty_slots = [level for level, slot in char.spellcasting.slots.items() if slot.current == 0 and slot.max > 0]
         if empty_slots and all(slot.current == 0 for slot in char.spellcasting.slots.values() if slot.max > 0):
@@ -169,13 +171,11 @@ def validate_and_suggest(tool_name: str, params: Dict[str, Any]) -> str:
 def validate_combat_action(action: str, params: Dict[str, Any]) -> None:
     """
     Validate combat-specific actions with context awareness.
+    Now supports out-of-combat usage for environmental hazards and narrative damage.
     """
     from dnd_mcp_server.persistence.state import get_game_state
     
     state = get_game_state(params.get("campaign_id", "default"))
-    
-    if not state.combat.active:
-        raise ValidationError(f"Cannot {action}: No active combat. Use start_combat() first.")
     
     if action == "attack":
         attacker_id = params.get("attacker_id")
@@ -184,12 +184,20 @@ def validate_combat_action(action: str, params: Dict[str, Any]) -> None:
         if not attacker_id or not target_id:
             raise ValidationError("Attack requires both attacker_id and target_id")
         
-        # Validate IDs exist in combat
-        combatant_ids = [c.id for c in state.combat.combatants]
-        if attacker_id not in combatant_ids:
-            raise ValidationError(f"Attacker ID '{attacker_id}' not in combat. Use get_initiative_order() to see valid IDs.")
-        if target_id not in combatant_ids:
-            raise ValidationError(f"Target ID '{target_id}' not in combat. Use get_initiative_order() to see valid IDs.")
+        # Validate IDs - support both combatants and environmental/narrative targets
+        valid_ids = []
+        if state.combat and state.combat.active:
+            valid_ids = [c.id for c in state.combat.combatants]
+        
+        # Support environmental and narrative target IDs
+        environmental_ids = ["trap", "rockslide", "poison_dart", "environment", "falling_rocks", "magic_turret", "door", "wall"]
+        valid_ids.extend(environmental_ids)
+        
+        # Also allow any ID that looks like a combatant ID (pc_* or contains _)
+        if attacker_id not in valid_ids and not (attacker_id.startswith("pc_") or "_" in attacker_id):
+            raise ValidationError(f"Attacker ID '{attacker_id}' not found. Use descriptive IDs like 'trap', 'rockslide' or character IDs.")
+        if target_id not in valid_ids and not (target_id.startswith("pc_") or "_" in target_id):
+            raise ValidationError(f"Target ID '{target_id}' not found. Use descriptive IDs like 'trap', 'rockslide' or character IDs.")
     
     elif action == "damage":
         target_id = params.get("target_id")
@@ -198,8 +206,18 @@ def validate_combat_action(action: str, params: Dict[str, Any]) -> None:
         if not target_id or not amount:
             raise ValidationError("Damage requires target_id and amount")
         
-        if target_id not in [c.id for c in state.combat.combatants]:
-            raise ValidationError(f"Target '{target_id}' not in active combat")
+        # Support damage to both combatants and environmental targets
+        valid_targets = []
+        if state.combat and state.combat.active:
+            valid_targets = [c.id for c in state.combat.combatants]
+        
+        # Support environmental targets
+        environmental_targets = ["trap", "rockslide", "poison_dart", "environment", "falling_rocks", "magic_turret", "door", "wall"]
+        valid_targets.extend(environmental_targets)
+        
+        # Also allow any ID that looks like a combatant ID
+        if target_id not in valid_targets and not (target_id.startswith("pc_") or "_" in target_id):
+            raise ValidationError(f"Target '{target_id}' not found. Use descriptive IDs like 'trap', 'rockslide' or character IDs.")
 
 def validate_spell_casting(params: Dict[str, Any]) -> None:
     """
