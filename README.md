@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/gwyntel/5e-mcp)
+
 # Solo D&D 5e MCP Server
 
 ### *Your Personal AI Dungeon Master Engine*
